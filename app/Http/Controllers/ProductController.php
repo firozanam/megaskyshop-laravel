@@ -442,6 +442,33 @@ class ProductController extends Controller
      */
     public function addReview(Request $request, string $id)
     {
+        // Check if user is authenticated
+        if (!auth()->check()) {
+            return redirect()->back()
+                ->withErrors(['auth' => 'You must be logged in to write a review.'])
+                ->withInput();
+        }
+        
+        $product = Product::findOrFail($id);
+        
+        // Check if the user has purchased this product
+        if (!$this->hasUserPurchasedProduct(auth()->id(), $product->id)) {
+            return redirect()->back()
+                ->withErrors(['purchase' => 'You can only review products you have purchased.'])
+                ->withInput();
+        }
+        
+        // Check if the user has already reviewed this product
+        $existingReview = Review::where('product_id', $product->id)
+            ->where('user_id', auth()->id())
+            ->first();
+            
+        if ($existingReview) {
+            return redirect()->back()
+                ->withErrors(['existing' => 'You have already reviewed this product.'])
+                ->withInput();
+        }
+        
         $validator = Validator::make($request->all(), [
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string',
@@ -454,8 +481,6 @@ class ProductController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
-        
-        $product = Product::findOrFail($id);
         
         $review = new Review([
             'rating' => $request->rating,
@@ -473,6 +498,28 @@ class ProductController extends Controller
         $product->updateAverageRating();
         
         return redirect()->back()->with('success', 'Review added successfully.');
+    }
+    
+    /**
+     * Check if a user has purchased a specific product
+     */
+    private function hasUserPurchasedProduct(int $userId, int $productId): bool
+    {
+        // Get completed orders for this user
+        $completedOrders = \App\Models\Order::where('user_id', $userId)
+            ->whereIn('status', ['Delivered', 'Shipped'])
+            ->pluck('id');
+            
+        if ($completedOrders->isEmpty()) {
+            return false;
+        }
+        
+        // Check if any of these orders contain the product
+        $purchaseCount = \App\Models\OrderItem::whereIn('order_id', $completedOrders)
+            ->where('product_id', $productId)
+            ->count();
+            
+        return $purchaseCount > 0;
     }
 
     /**
