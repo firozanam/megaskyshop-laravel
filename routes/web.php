@@ -11,6 +11,7 @@ use App\Http\Middleware\CheckRole;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\HomepageController;
 use App\Http\Controllers\AdminCustomerController;
+use App\Http\Controllers\WishlistController;
 
 Route::get('/', [HomepageController::class, 'index'])->name('home');
 
@@ -171,6 +172,12 @@ Route::get('/orders/success/{id}', [OrderController::class, 'success'])->name('o
 Route::middleware(['auth'])->group(function () {
     Route::get('/user/orders', [OrderController::class, 'userIndex'])->name('user.orders.index');
     Route::get('/user/orders/{order}', [OrderController::class, 'userShow'])->name('user.orders.show');
+    
+    // Wishlist routes
+    Route::get('/user/wishlist', [WishlistController::class, 'index'])->name('user.wishlist.index');
+    Route::post('/user/wishlist/add', [WishlistController::class, 'addToWishlist'])->name('user.wishlist.add');
+    Route::delete('/user/wishlist/remove', [WishlistController::class, 'removeFromWishlist'])->name('user.wishlist.remove');
+    Route::get('/user/wishlist/check', [WishlistController::class, 'checkWishlist'])->name('user.wishlist.check');
 });
 
 // Debug route for storage

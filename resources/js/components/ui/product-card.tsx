@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { useCart } from '@/contexts/CartContext';
+import { HeartIcon } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import useWishlist from '@/hooks/useWishlist';
 
 export interface ProductImage {
   id: number;
@@ -36,6 +39,7 @@ export default function ProductCard({
   const [imageError, setImageError] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const { addItem } = useCart();
+  const { isInWishlist, isToggling, toggleWishlist } = useWishlist(product.id);
   
   const handleImageError = () => {
     setImageError(true);
@@ -67,6 +71,12 @@ export default function ProductCard({
     }
   };
 
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist();
+  };
+
   const getImageUrl = () => {
     if (imageError) {
       return '/images/placeholder.jpg';
@@ -96,7 +106,7 @@ export default function ProductCard({
         return `/storage/${firstImage.image_path}`;
       } else if (firstImage.url) {
         return `/storage/${firstImage.url}`;
-    }
+      }
     }
     
     // Fallback to placeholder if no images found
@@ -132,8 +142,22 @@ export default function ProductCard({
         {imageError && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
             <span className="text-gray-400">Image not available</span>
-        </div>
+          </div>
         )}
+        
+        {/* Wishlist button */}
+        <button 
+          onClick={handleToggleWishlist}
+          disabled={isToggling}
+          className="absolute top-2 left-2 p-1.5 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-sm z-10 transition-all duration-200"
+          aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          {isInWishlist ? (
+            <HeartIconSolid className="h-5 w-5 text-red-500" />
+          ) : (
+            <HeartIcon className="h-5 w-5 text-gray-500 hover:text-red-500" />
+          )}
+        </button>
       </Link>
       
       <div className="p-4 flex flex-col flex-grow">
@@ -163,9 +187,9 @@ export default function ProductCard({
             )}
           </div>
       
-      {showActions && (
+          {showActions && (
             <div className="flex gap-2">
-          <button 
+              <button 
                 className={`flex-1 py-2 px-4 font-medium text-center text-sm rounded-md transition ${
                   product.stock !== undefined && product.stock <= 0
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -173,21 +197,21 @@ export default function ProductCard({
                     ? 'bg-blue-400 text-white cursor-wait'
                     : 'bg-blue-500 text-white hover:bg-blue-600'
                 }`}
-            onClick={handleAddToCart}
+                onClick={handleAddToCart}
                 disabled={addingToCart || (product.stock !== undefined && product.stock <= 0)}
-            aria-label="Add to cart"
-          >
+                aria-label="Add to cart"
+              >
                 {addingToCart ? 'Adding...' : product.stock !== undefined && product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
-          </button>
-          <Link 
+              </button>
+              <Link 
                 href={`/products/${product.slug || product.id}`} 
                 className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition text-center text-sm rounded-md"
-            aria-label="View details"
-          >
-            View Details
-          </Link>
-        </div>
-      )}
+                aria-label="View details"
+              >
+                View Details
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

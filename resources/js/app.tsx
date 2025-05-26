@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { initializeTheme } from './hooks/use-appearance';
 import axios from 'axios';
 import { CartProvider } from './contexts/CartContext';
+import { Toaster } from 'react-hot-toast';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -29,6 +30,15 @@ createInertiaApp({
         root.render(
             <CartProvider>
                 <App {...props} />
+                <Toaster position="top-right" toastOptions={{
+                    // Customize toast styling
+                    style: {
+                        background: '#363636',
+                        color: '#fff',
+                    },
+                    // Customize toast duration
+                    duration: 3000,
+                }} />
             </CartProvider>
         );
     },

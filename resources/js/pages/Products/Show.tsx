@@ -3,9 +3,10 @@ import { Head, usePage, Link, useForm } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
 import ProductCard from '@/components/ui/product-card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, MinusIcon, PlusIcon, Check, ShoppingCart, Star, StarHalf } from 'lucide-react';
+import { ChevronLeft, MinusIcon, PlusIcon, Check, ShoppingCart, Star, StarHalf, Heart } from 'lucide-react';
 import { PageProps } from '@inertiajs/core';
 import { useCart } from '@/contexts/CartContext';
+import useWishlist from '@/hooks/useWishlist';
 
 interface ProductImage {
   id: number;
@@ -77,6 +78,7 @@ export default function Show() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+  const { isInWishlist, isToggling, toggleWishlist } = useWishlist(product.id);
   
   // Facebook Pixel ViewContent tracking
   useEffect(() => {
@@ -285,7 +287,19 @@ export default function Show() {
             
             {/* Right Column - Product Info */}
             <div className="flex flex-col">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+              <div className="flex justify-between items-start mb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{product.name}</h1>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`${isInWishlist ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-gray-500'}`}
+                  onClick={toggleWishlist}
+                  disabled={isToggling}
+                  title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                  <Heart className={`h-6 w-6 ${isInWishlist ? 'fill-current' : ''}`} />
+                </Button>
+              </div>
               
               {/* Rating */}
               <div className="flex items-center mb-4">
@@ -373,10 +387,12 @@ export default function Show() {
                   <Button
                     className="flex-1"
                     size="lg"
-                    variant="outline"
-                    asChild
+                    variant={isInWishlist ? "destructive" : "outline"}
+                    onClick={toggleWishlist}
+                    disabled={isToggling}
                   >
-                    <Link href="#order-form">Buy Now</Link>
+                    <Heart className={`mr-2 h-5 w-5 ${isInWishlist ? 'fill-current' : ''}`} />
+                    {isToggling ? 'Updating...' : isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
                   </Button>
                 </div>
               </div>
