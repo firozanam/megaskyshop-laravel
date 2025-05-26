@@ -147,6 +147,8 @@ Route::inertia('/about', 'about')->name('about');
 Route::inertia('/contact', 'contact')->name('contact');
 Route::inertia('/privacy-policy', 'privacy-policy')->name('privacy.policy');
 Route::inertia('/terms-of-service', 'terms-of-service')->name('terms.service');
+Route::inertia('/cart', 'cart')->name('cart');
+Route::inertia('/checkout', 'checkout')->name('checkout');
 
 // Public category routes
 Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');

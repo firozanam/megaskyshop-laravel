@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
+import { useCart } from '@/contexts/CartContext';
 
 export interface ProductImage {
   id: number;
@@ -24,18 +25,17 @@ interface ProductCardProps {
   className?: string;
   priority?: boolean;
   showActions?: boolean;
-  onAddToCart?: (product: ProductProps) => void;
 }
 
 export default function ProductCard({ 
   product, 
   className = '', 
   priority = false,
-  showActions = true,
-  onAddToCart 
+  showActions = true
 }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
+  const { addItem } = useCart();
   
   const handleImageError = () => {
     setImageError(true);
@@ -45,15 +45,25 @@ export default function ProductCard({
     e.preventDefault();
     e.stopPropagation();
     
-    if (onAddToCart) {
-      setAddingToCart(true);
-      try {
-        onAddToCart(product);
-      } catch (error) {
-        console.error('Error adding to cart:', error);
-      } finally {
-        setTimeout(() => setAddingToCart(false), 500);
-      }
+    setAddingToCart(true);
+    try {
+      // Get the main image URL
+      const imageUrl = getImageUrl();
+      
+      // Add to cart using the context
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        sale_price: product.sale_price || undefined,
+        image: imageUrl,
+        slug: product.slug,
+        stock: product.stock,
+      }, 1);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    } finally {
+      setTimeout(() => setAddingToCart(false), 500);
     }
   };
 

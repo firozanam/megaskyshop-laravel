@@ -1,6 +1,8 @@
 import React, { ReactNode } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { SharedData } from '@/types';
+import { ShoppingCartIcon } from '@heroicons/react/24/outline';
+import { useCart } from '@/contexts/CartContext';
 
 interface PublicLayoutProps {
   children: ReactNode;
@@ -9,6 +11,7 @@ interface PublicLayoutProps {
 
 export default function PublicLayout({ children, title }: PublicLayoutProps) {
   const { auth } = usePage<SharedData>().props;
+  const { itemCount } = useCart();
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -28,6 +31,14 @@ export default function PublicLayout({ children, title }: PublicLayoutProps) {
             </Link>
             <Link href="/contact" className="text-gray-600 hover:text-gray-900 font-medium">
               Contact
+            </Link>
+            <Link href="/cart" className="text-gray-600 hover:text-gray-900 font-medium relative">
+              <ShoppingCartIcon className="h-6 w-6" />
+              {itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {itemCount > 9 ? '9+' : itemCount}
+                </span>
+              )}
             </Link>
             
             {auth.user ? (

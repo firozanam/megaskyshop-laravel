@@ -5,6 +5,7 @@ import ProductCard from '@/components/ui/product-card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, MinusIcon, PlusIcon, Check, ShoppingCart, Star, StarHalf } from 'lucide-react';
 import { PageProps } from '@inertiajs/core';
+import { useCart } from '@/contexts/CartContext';
 
 interface ProductImage {
   id: number;
@@ -116,14 +117,33 @@ export default function Show() {
     }
   };
   
+  const { addItem } = useCart();
+  
   const handleAddToCart = () => {
     setAddingToCart(true);
-    // Simulate API call delay
+    
+    // Get the main image URL
+    const imageUrl = product.images && product.images.length > 0 
+      ? getImageUrl(product.images[0]) 
+      : product.main_image 
+        ? `/storage/${product.main_image}` 
+        : '/images/placeholder.jpg';
+    
+    // Add to cart
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      sale_price: product.sale_price || undefined,
+      image: imageUrl,
+      slug: product.slug,
+      stock: product.stock,
+    }, quantity);
+    
+    // Show success feedback
     setTimeout(() => {
       setAddingToCart(false);
-      // Here you would normally implement actual cart functionality
-      console.log(`Added ${quantity} of ${product.name} to cart`);
-    }, 800);
+    }, 500);
   };
   
   const submitReview = () => {
