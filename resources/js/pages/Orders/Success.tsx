@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -28,7 +28,29 @@ interface OrderSuccessProps {
   success?: string;
 }
 
+declare global {
+  interface Window {
+    fbq?: (event: string, name: string, params?: any) => void;
+  }
+}
+
 export default function OrderSuccess({ order, success }: OrderSuccessProps) {
+  useEffect(() => {
+    // Facebook Pixel tracking
+    if (window.fbq) {
+      const contentIds = order.items.map(item => item.id.toString());
+      const orderTotal = parseFloat(order.total);
+      
+      window.fbq('track', 'Purchase', {
+        content_type: 'product',
+        content_ids: contentIds,
+        currency: 'BDT',
+        value: orderTotal,
+        order_id: order.id.toString()
+      });
+    }
+  }, [order]);
+
   return (
     <PublicLayout>
       <Head title="Order Placed Successfully" />

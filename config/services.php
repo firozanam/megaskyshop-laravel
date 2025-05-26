@@ -42,4 +42,11 @@ return [
         'enabled' => env('GOOGLE_ANALYTICS_ENABLED', true),
     ],
 
+    'facebook-pixel' => [
+        'pixel_id' => env('FACEBOOK_PIXEL_ID'),
+        'access_token' => env('FACEBOOK_PIXEL_ACCESS_TOKEN'),
+        'debug_mode' => env('FACEBOOK_PIXEL_DEBUG_MODE', false),
+        'enabled' => env('FACEBOOK_PIXEL_ENABLED', true),
+    ],
+
 ];

@@ -28,6 +28,12 @@ interface CheckoutProps extends PageProps {
   };
 }
 
+declare global {
+  interface Window {
+    fbq?: (event: string, name: string, params?: any) => void;
+  }
+}
+
 export default function Checkout() {
   const { items, subtotal, clearCart } = useCart();
   const { auth } = usePage<CheckoutProps>().props;
@@ -39,6 +45,26 @@ export default function Checkout() {
       window.location.href = '/cart';
     }
   }, [items]);
+  
+  // Track InitiateCheckout with Facebook Pixel
+  useEffect(() => {
+    if (window.fbq && items.length > 0) {
+      const contentIds = items.map(item => item.id.toString());
+      
+      window.fbq('track', 'InitiateCheckout', {
+        content_type: 'product',
+        content_ids: contentIds,
+        contents: items.map(item => ({
+          id: item.id.toString(),
+          quantity: item.quantity,
+          item_price: item.sale_price || item.price
+        })),
+        num_items: items.reduce((total, item) => total + item.quantity, 0),
+        currency: 'BDT',
+        value: subtotal
+      });
+    }
+  }, [items, subtotal]);
   
   // Free delivery threshold
   const FREE_DELIVERY_THRESHOLD = 500;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, usePage, Link, useForm } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
 import ProductCard from '@/components/ui/product-card';
@@ -65,12 +65,32 @@ interface ReviewFormErrors {
   existing?: string;
 }
 
+declare global {
+  interface Window {
+    fbq?: (event: string, name: string, params?: any) => void;
+  }
+}
+
 export default function Show() {
   const { product, relatedProducts, auth } = usePage<ProductDetailsPageProps>().props;
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+  
+  // Facebook Pixel ViewContent tracking
+  useEffect(() => {
+    if (window.fbq && product) {
+      window.fbq('track', 'ViewContent', {
+        content_type: 'product',
+        content_ids: [product.id.toString()],
+        content_name: product.name,
+        content_category: 'Product',
+        value: product.sale_price || product.price,
+        currency: 'BDT'
+      });
+    }
+  }, [product]);
   
   // Check if the user has purchased this product and can review it
   const canReview = Boolean(auth.user) && !product.reviews.some(review => 
@@ -139,6 +159,24 @@ export default function Show() {
       slug: product.slug,
       stock: product.stock,
     }, quantity);
+    
+    // Track AddToCart event with Facebook Pixel
+    if (window.fbq) {
+      window.fbq('track', 'AddToCart', {
+        content_type: 'product',
+        content_ids: [product.id.toString()],
+        content_name: product.name,
+        value: (product.sale_price || product.price) * quantity,
+        currency: 'BDT',
+        contents: [
+          {
+            id: product.id.toString(),
+            quantity: quantity,
+            item_price: product.sale_price || product.price
+          }
+        ]
+      });
+    }
     
     // Show success feedback
     setTimeout(() => {

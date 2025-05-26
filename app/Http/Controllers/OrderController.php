@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Facades\FBPixel;
 use App\Mail\OrderConfirmation;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -181,6 +182,7 @@ class OrderController extends Controller
         // Calculate total and validate stock
         $total = 0;
         $items = [];
+        $content_ids = [];
         
         foreach ($request->items as $item) {
             $product = Product::findOrFail($item['id']);
@@ -202,6 +204,9 @@ class OrderController extends Controller
                 'price' => $product->price,
                 'image' => $product->main_image,
             ];
+            
+            // Add product ID to content_ids for Facebook Pixel tracking
+            $content_ids[] = (string) $product->id;
             
             // Reduce stock
             $product->stock -= $item['quantity'];
@@ -238,6 +243,23 @@ class OrderController extends Controller
                 // Log the error but don't stop the order process
                 \Log::error("Failed to send order confirmation email: " . $e->getMessage());
             }
+        }
+        
+        // Track purchase event with Facebook Pixel
+        try {
+            FBPixel::postEvent([
+                'name' => 'Purchase',
+                'params' => [
+                    'currency' => 'BDT',
+                    'value' => $total,
+                    'content_type' => 'product',
+                    'content_ids' => $content_ids,
+                    'order_id' => (string) $order->id
+                ]
+            ]);
+        } catch (\Exception $e) {
+            // Log the error but don't stop the order process
+            \Log::error("Failed to track Facebook Pixel purchase event: " . $e->getMessage());
         }
         
         return redirect()->route('orders.success', ['id' => $order->id])

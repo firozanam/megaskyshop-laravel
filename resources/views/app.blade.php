@@ -42,6 +42,9 @@
 
         <!-- Google Analytics 4 -->
         <x-google-analytics />
+        
+        <!-- Facebook Pixel -->
+        <x-facebook-pixel />
 
         @routes
         @viteReactRefresh
