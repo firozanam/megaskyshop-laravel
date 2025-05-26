@@ -4,7 +4,19 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutDashboard, Package, Users, Settings, ShoppingBag, Tag, Home, UserCircle } from 'lucide-react';
+import { 
+    LayoutDashboard, 
+    Package, 
+    Users, 
+    Settings, 
+    ShoppingBag, 
+    Tag, 
+    Home, 
+    UserCircle,
+    Mail,
+    LineChart,
+    Share2
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -45,8 +57,24 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Settings',
-        href: '/admin/settings',
         icon: Settings,
+        children: [
+            {
+                title: 'SMTP Settings',
+                href: '/admin/settings/smtp',
+                icon: Mail,
+            },
+            {
+                title: 'Google Analytics',
+                href: '/admin/settings/google-analytics',
+                icon: LineChart,
+            },
+            {
+                title: 'Facebook Pixel',
+                href: '/admin/settings/facebook-pixel',
+                icon: Share2,
+            },
+        ],
     },
 ];
 
