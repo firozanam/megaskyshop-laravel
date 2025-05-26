@@ -36,6 +36,7 @@ interface SmtpSettingsProps {
     MAIL_ENCRYPTION: string;
     MAIL_FROM_ADDRESS: string;
     MAIL_FROM_NAME: string;
+    ADMIN_EMAIL: string;
   };
   errors?: Record<string, string>;
   flash?: {
@@ -61,6 +62,7 @@ export default function SmtpSettings({ mailSettings, errors = {}, flash }: SmtpS
     MAIL_ENCRYPTION: mailSettings.MAIL_ENCRYPTION || 'tls',
     MAIL_FROM_ADDRESS: mailSettings.MAIL_FROM_ADDRESS || '',
     MAIL_FROM_NAME: mailSettings.MAIL_FROM_NAME || '',
+    ADMIN_EMAIL: mailSettings.ADMIN_EMAIL || '',
   });
 
   // For test email
@@ -70,7 +72,9 @@ export default function SmtpSettings({ mailSettings, errors = {}, flash }: SmtpS
   const [testError, setTestError] = useState<string | null>(null);
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+    }
     post(route('admin.settings.smtp.update'));
   };
 
@@ -136,6 +140,13 @@ export default function SmtpSettings({ mailSettings, errors = {}, flash }: SmtpS
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
+                  {/* Hidden input for Admin Email */}
+                  <input 
+                    type="hidden" 
+                    name="ADMIN_EMAIL" 
+                    value={data.ADMIN_EMAIL} 
+                  />
+                
                   <div className="grid gap-2">
                     <Label htmlFor="MAIL_MAILER">Mail Driver</Label>
                     <Select 
@@ -266,7 +277,7 @@ export default function SmtpSettings({ mailSettings, errors = {}, flash }: SmtpS
                     )}
                   </div>
                 </div>
-
+                
                 <Button type="submit" className="w-full" disabled={processing}>
                   {processing ? (
                     <>
@@ -281,69 +292,118 @@ export default function SmtpSettings({ mailSettings, errors = {}, flash }: SmtpS
             </CardContent>
           </Card>
 
-          {/* Test Email Form */}
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle>Test Email Configuration</CardTitle>
-              <CardDescription>
-                Send a test email to verify your settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleTestEmail} className="space-y-6">
+          <div className="space-y-6">
+            {/* Admin Email Configuration */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle>Admin Email Configuration</CardTitle>
+                <CardDescription>
+                  Set up the email address to receive order notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="test_email">Recipient Email</Label>
+                    <Label htmlFor="ADMIN_EMAIL">Admin Email</Label>
                     <Input
-                      id="test_email"
+                      id="ADMIN_EMAIL"
                       type="email"
-                      placeholder="Enter email address"
-                      value={testEmail}
-                      onChange={(e) => setTestEmail(e.target.value)}
-                      required
+                      placeholder="admin@example.com"
+                      value={data.ADMIN_EMAIL}
+                      onChange={(e) => setData('ADMIN_EMAIL', e.target.value)}
                     />
-                    {testError && (
-                      <p className="text-sm text-red-500">{testError}</p>
+                    {errors.ADMIN_EMAIL && (
+                      <p className="text-sm text-red-500">{errors.ADMIN_EMAIL}</p>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      This email address will receive order confirmation emails
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <Button 
+                      type="button" 
+                      onClick={handleSubmit} 
+                      className="w-full" 
+                      disabled={processing}
+                    >
+                      {processing ? (
+                        <>
+                          <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Settings'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Test Email Form */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle>Test Email Configuration</CardTitle>
+                <CardDescription>
+                  Send a test email to verify your settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleTestEmail} className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="test_email">Recipient Email</Label>
+                      <Input
+                        id="test_email"
+                        type="email"
+                        placeholder="Enter email address"
+                        value={testEmail}
+                        onChange={(e) => setTestEmail(e.target.value)}
+                        required
+                      />
+                      {testError && (
+                        <p className="text-sm text-red-500">{testError}</p>
+                      )}
+                    </div>
+
+                    {testSuccess && (
+                      <Alert className="bg-green-50 border-green-200">
+                        <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                        <AlertDescription className="text-green-700">
+                          {testSuccess}
+                        </AlertDescription>
+                      </Alert>
                     )}
                   </div>
 
-                  {testSuccess && (
-                    <Alert className="bg-green-50 border-green-200">
-                      <CheckCircleIcon className="h-4 w-4 text-green-600" />
-                      <AlertDescription className="text-green-700">
-                        {testSuccess}
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <Button 
+                    type="submit" 
+                    variant="outline" 
+                    className="w-full" 
+                    disabled={isSendingTest || !testEmail}
+                  >
+                    {isSendingTest ? (
+                      <>
+                        <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Send Test Email
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+              <CardFooter className="bg-gray-50 border-t px-6 py-4">
+                <div className="text-sm text-gray-500">
+                  <p className="font-medium">Note:</p>
+                  <p>Test emails help ensure your mail configuration is working correctly. Make sure to save your settings before testing.</p>
                 </div>
-
-                <Button 
-                  type="submit" 
-                  variant="outline" 
-                  className="w-full" 
-                  disabled={isSendingTest || !testEmail}
-                >
-                  {isSendingTest ? (
-                    <>
-                      <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="mr-2 h-4 w-4" />
-                      Send Test Email
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-            <CardFooter className="bg-gray-50 border-t px-6 py-4">
-              <div className="text-sm text-gray-500">
-                <p className="font-medium">Note:</p>
-                <p>Test emails help ensure your mail configuration is working correctly. Make sure to save your settings before testing.</p>
-              </div>
-            </CardFooter>
-          </Card>
+              </CardFooter>
+            </Card>
+          </div>
         </div>
       </div>
     </AdminLayout>

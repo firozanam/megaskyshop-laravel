@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderConfirmation;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderTracking;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
@@ -226,6 +228,17 @@ class OrderController extends Controller
         $order->tracking()->create([
             'status' => 'Pending',
         ]);
+        
+        // Send order confirmation email to admin if admin email is set
+        $adminEmail = config('mail.admin_email');
+        if ($adminEmail) {
+            try {
+                Mail::to($adminEmail)->send(new OrderConfirmation($order));
+            } catch (\Exception $e) {
+                // Log the error but don't stop the order process
+                \Log::error("Failed to send order confirmation email: " . $e->getMessage());
+            }
+        }
         
         return redirect()->route('orders.success', ['id' => $order->id])
             ->with('success', 'Order placed successfully!');

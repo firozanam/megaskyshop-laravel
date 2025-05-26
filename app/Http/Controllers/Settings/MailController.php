@@ -44,6 +44,7 @@ class MailController extends Controller
             'MAIL_ENCRYPTION',
             'MAIL_FROM_ADDRESS',
             'MAIL_FROM_NAME',
+            'ADMIN_EMAIL',
         ]);
         
         // Set default values if not found
@@ -70,6 +71,7 @@ class MailController extends Controller
             'MAIL_ENCRYPTION' => ['nullable', 'string', 'in:tls,ssl,null'],
             'MAIL_FROM_ADDRESS' => ['required', 'email'],
             'MAIL_FROM_NAME' => ['required', 'string'],
+            'ADMIN_EMAIL' => ['nullable', 'email'],
         ]);
         
         // Handle null encryption value

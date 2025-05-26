@@ -43,7 +43,7 @@ export default function AdminDashboard({ recentProducts = [], productCount = 0 }
         },
         {
             title: 'Total Sales',
-            value: '$12,345',
+            value: '৳12,345',
             description: 'Revenue this month',
             icon: <ShoppingBag className="h-6 w-6 text-primary" />,
             change: '+12% from last month',
@@ -143,7 +143,7 @@ export default function AdminDashboard({ recentProducts = [], productCount = 0 }
                                         <div className="absolute bottom-0 w-full bg-black/40 p-2 text-white">
                                             <p className="text-sm font-medium">{product.name}</p>
                                             <div className="flex items-center justify-between">
-                                                <p className="text-xs">${product.price}</p>
+                                                <p className="text-xs">৳{product.price}</p>
                                                 <Link href={`/admin/products/${product.id}/edit`}>
                                                     <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-white hover:bg-white/20">
                                                         <Edit className="h-3.5 w-3.5" />

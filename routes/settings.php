@@ -3,6 +3,7 @@
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\MailController;
+use App\Http\Controllers\Settings\GoogleAnalyticsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -24,5 +25,10 @@ Route::middleware('auth')->group(function () {
         Route::get('admin/settings/smtp', [MailController::class, 'edit'])->name('admin.settings.smtp');
         Route::post('admin/settings/smtp', [MailController::class, 'update'])->name('admin.settings.smtp.update');
         Route::post('admin/settings/smtp/test', [MailController::class, 'sendTest'])->name('admin.settings.smtp.test');
+        
+        // Google Analytics routes
+        Route::get('admin/settings/google-analytics', [GoogleAnalyticsController::class, 'edit'])->name('admin.settings.ga');
+        Route::post('admin/settings/google-analytics', [GoogleAnalyticsController::class, 'update'])->name('admin.settings.ga.update');
+        Route::post('admin/settings/google-analytics/test', [GoogleAnalyticsController::class, 'test'])->name('admin.settings.ga.test');
     });
 });

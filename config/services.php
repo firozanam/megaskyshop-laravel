@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'google-analytics' => [
+        'measurement_id' => env('GOOGLE_ANALYTICS_MEASUREMENT_ID'),
+        'api_secret' => env('GOOGLE_ANALYTICS_API_SECRET'),
+        'debug_mode' => env('GOOGLE_ANALYTICS_DEBUG_MODE', false),
+        'enabled' => env('GOOGLE_ANALYTICS_ENABLED', true),
+    ],
+
 ];

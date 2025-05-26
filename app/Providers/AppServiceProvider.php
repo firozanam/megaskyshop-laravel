@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Config;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Add admin email to mail configuration
+        $adminEmail = env('ADMIN_EMAIL');
+        if ($adminEmail) {
+            Config::set('mail.admin_email', $adminEmail);
+        }
     }
 }
