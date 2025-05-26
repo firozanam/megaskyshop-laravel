@@ -18,7 +18,8 @@ import {
     Share2,
     BarChart3,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    FileIcon
 } from 'lucide-react';
 import AppLogo from './app-logo';
 import React, { useState } from 'react';
@@ -190,6 +191,11 @@ const mainNavItems: NavItem[] = [
         title: 'Reports',
         href: '/admin/reports',
         icon: BarChart3,
+    },
+    {
+        title: 'File Manager',
+        href: '/admin/filemanager',
+        icon: FileIcon,
     },
     {
         title: 'Homepage',

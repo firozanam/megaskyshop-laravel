@@ -139,6 +139,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/homepage/featured-products/{id}', [HomepageController::class, 'removeFeaturedProduct'])->name('admin.homepage.featured-products.remove');
     Route::put('/admin/homepage/featured-products/order', [HomepageController::class, 'updateFeaturedProductOrder'])->name('admin.homepage.featured-products.order');
     Route::put('/admin/homepage/featured-products/{id}/toggle', [HomepageController::class, 'toggleFeaturedProductStatus'])->name('admin.homepage.featured-products.toggle');
+    
+    // File Manager routes
+    Route::get('/admin/filemanager', [App\Http\Controllers\Admin\FileManagerController::class, 'index'])->name('admin.filemanager');
+    Route::post('/admin/filemanager/upload', [App\Http\Controllers\Admin\FileManagerController::class, 'upload'])->name('admin.filemanager.upload');
+    Route::delete('/admin/filemanager/destroy', [App\Http\Controllers\Admin\FileManagerController::class, 'destroy'])->name('admin.filemanager.destroy');
 });
 
 // Public product routes
