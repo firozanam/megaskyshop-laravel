@@ -96,7 +96,7 @@ export default function ProductCard({
         return `/storage/${firstImage.image_path}`;
       } else if (firstImage.url) {
         return `/storage/${firstImage.url}`;
-      }
+    }
     }
     
     // Fallback to placeholder if no images found
@@ -110,11 +110,11 @@ export default function ProductCard({
   return (
     <div className={`bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden transition-all duration-300 hover:shadow-md group flex flex-col h-full ${className}`}>
       <Link href={`/products/${product.slug || product.id}`} className="block relative w-full pt-[100%] overflow-hidden bg-gray-100">
-        {discount > 0 && (
+          {discount > 0 && (
           <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
-            -{discount}%
-          </div>
-        )}
+              -{discount}%
+            </div>
+          )}
         {product.stock !== undefined && product.stock <= 0 && (
           <div className="absolute top-2 right-2">
             <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
@@ -122,17 +122,17 @@ export default function ProductCard({
             </span>
           </div>
         )}
-        <img 
-          src={getImageUrl()}
-          alt={product.name}
+          <img 
+            src={getImageUrl()}
+            alt={product.name}
           className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-200"
-          onError={handleImageError}
+            onError={handleImageError}
           loading={priority ? "eager" : "lazy"}
-        />
+          />
         {imageError && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
             <span className="text-gray-400">Image not available</span>
-          </div>
+        </div>
         )}
       </Link>
       
@@ -162,10 +162,10 @@ export default function ProductCard({
               </div>
             )}
           </div>
-          
-          {showActions && (
+      
+      {showActions && (
             <div className="flex gap-2">
-              <button 
+          <button 
                 className={`flex-1 py-2 px-4 font-medium text-center text-sm rounded-md transition ${
                   product.stock !== undefined && product.stock <= 0
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -173,21 +173,21 @@ export default function ProductCard({
                     ? 'bg-blue-400 text-white cursor-wait'
                     : 'bg-blue-500 text-white hover:bg-blue-600'
                 }`}
-                onClick={handleAddToCart}
+            onClick={handleAddToCart}
                 disabled={addingToCart || (product.stock !== undefined && product.stock <= 0)}
-                aria-label="Add to cart"
-              >
+            aria-label="Add to cart"
+          >
                 {addingToCart ? 'Adding...' : product.stock !== undefined && product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
-              </button>
-              <Link 
+          </button>
+          <Link 
                 href={`/products/${product.slug || product.id}`} 
                 className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition text-center text-sm rounded-md"
-                aria-label="View details"
-              >
-                View Details
-              </Link>
-            </div>
-          )}
+            aria-label="View details"
+          >
+            View Details
+          </Link>
+        </div>
+      )}
         </div>
       </div>
     </div>

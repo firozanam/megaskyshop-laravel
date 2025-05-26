@@ -3,7 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Truck, AlertCircle, CheckCircle, Package, UserCircle, MapPin, Calendar, Phone, Mail, Info, Clock, CreditCard, ShoppingBag, ExternalLink } from 'lucide-react';
 import { 
@@ -16,8 +16,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
 
 interface OrderItem {
@@ -239,10 +237,17 @@ export default function OrderShow({ order, errors = {}, success }: OrderShowProp
             {/* Customer Information */}
             <Card className="shadow-sm">
               <CardHeader className="bg-gray-50 border-b pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <UserCircle className="h-5 w-5 text-gray-700" />
-                  Customer Details
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <UserCircle className="h-5 w-5 text-gray-700" />
+                    Customer Details
+                  </CardTitle>
+                  {order.user ? (
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Registered User</Badge>
+                  ) : (
+                    <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">Guest User</Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 <div className="flex items-start gap-3">
@@ -280,7 +285,7 @@ export default function OrderShow({ order, errors = {}, success }: OrderShowProp
                     <Phone className="h-5 w-5" />
                   </div>
                   <div className="text-gray-700">
-                    <a href={`tel:${order.mobile}`} className="hover:underline text-blue-600 flex items-center gap-1">
+                    <a href={`tel:${order.mobile}`} className="hover:underline text-blue-600 flex items-center gap-1 font-bold">
                       {order.mobile}
                       <ExternalLink className="h-3 w-3" />
                     </a>
