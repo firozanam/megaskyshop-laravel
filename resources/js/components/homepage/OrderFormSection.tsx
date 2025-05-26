@@ -194,14 +194,14 @@ export default function OrderFormSection({ title, products, defaultProductId = n
                                             </button>
                                             <div className="ml-auto font-medium">
                                                 ৳{selectedProduct.sale_price || selectedProduct.price}.00
-                                            </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
                             )}
                             
                             <div className="mb-6">
-                                {products.length > 1 && (
+                            {products.length > 1 && (
                                     <select
                                         id="product"
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
@@ -213,7 +213,7 @@ export default function OrderFormSection({ title, products, defaultProductId = n
                                         ))}
                                     </select>
                                 )}
-                            </div>
+                                </div>
                             
                             <div className="border-t border-gray-200 pt-4 mb-4">
                                 <div className="flex justify-between mb-2">

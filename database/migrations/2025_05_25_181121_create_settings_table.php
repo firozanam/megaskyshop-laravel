@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
+            $table->string('key')->unique()->index();
+            $table->json('value')->nullable();
+            $table->string('group')->default('general')->index();
             $table->timestamps();
         });
     }

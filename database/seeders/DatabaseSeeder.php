@@ -7,6 +7,7 @@ use Database\Seeders\ProductSeeder;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\OrderSeeder;
 use Database\Seeders\HomepageSectionSeeder;
+use Database\Seeders\SettingsSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,5 +21,6 @@ class DatabaseSeeder extends Seeder
         $this->call(CategorySeeder::class);
         $this->call(OrderSeeder::class);
         $this->call(HomepageSectionSeeder::class);
+        $this->call(SettingsSeeder::class);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ReportController;
 use App\Http\Middleware\CheckRole;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\HomepageController;
@@ -59,18 +60,13 @@ Route::post('/debug/test-post-put', function(\Illuminate\Http\Request $request) 
 })->name('debug.test-post-put');
 
 // Middleware debugger route - add the same middleware as your admin routes
-Route::post('/debug/middleware-test', function(\Illuminate\Http\Request $request) {
-    \Log::info('Middleware test route hit', [
-        'method' => $request->method(),
-        'data' => $request->all(),
-        'authenticated_user' => auth()->check() ? auth()->user()->email : 'Not authenticated'
-    ]);
+Route::get('/debug/middleware-test', function () {
     return response()->json([
         'success' => true,
         'message' => 'Successfully passed through middleware',
         'user' => auth()->check() ? auth()->user()->email : 'Not authenticated'
     ]);
-})->middleware(['auth', \App\Http\Middleware\CheckRole::class.':admin'])->name('debug.middleware-test');
+})->middleware(['auth', 'role:admin'])->name('debug.middleware-test');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
@@ -78,10 +74,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 });
 
-Route::middleware(['auth', CheckRole::class.':admin'])->group(function () {
+Route::middleware(['auth', 'role:admin'])->group(function () {
     // Admin dashboard with product data
     Route::get('/admin', [ProductController::class, 'adminDashboard'])->name('admin.dashboard');
     Route::get('/admin/dashboard', [ProductController::class, 'adminDashboard'])->name('admin.dashboard.index');
+    
+    // Admin reports page
+    Route::get('/admin/reports', [ReportController::class, 'index'])->name('admin.reports');
     
     // Admin product routes
     Route::resource('admin/products', ProductController::class)

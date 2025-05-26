@@ -15,7 +15,8 @@ import {
     UserCircle,
     Mail,
     LineChart,
-    Share2
+    Share2,
+    BarChart3
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -49,6 +50,11 @@ const mainNavItems: NavItem[] = [
         title: 'Users',
         href: '/admin/users',
         icon: Users,
+    },
+    {
+        title: 'Reports',
+        href: '/admin/reports',
+        icon: BarChart3,
     },
     {
         title: 'Homepage',
