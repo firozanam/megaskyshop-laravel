@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutDashboard, Package, Users, Settings, ShoppingBag, Tag, Home } from 'lucide-react';
+import { LayoutDashboard, Package, Users, Settings, ShoppingBag, Tag, Home, UserCircle } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -27,6 +27,11 @@ const mainNavItems: NavItem[] = [
         title: 'Orders',
         href: '/admin/orders',
         icon: ShoppingBag,
+    },
+    {
+        title: 'Customers',
+        href: '/admin/customers',
+        icon: UserCircle,
     },
     {
         title: 'Users',

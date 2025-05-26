@@ -9,6 +9,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Middleware\CheckRole;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\HomepageController;
+use App\Http\Controllers\AdminCustomerController;
 
 Route::get('/', [HomepageController::class, 'index'])->name('home');
 
@@ -123,6 +124,10 @@ Route::middleware(['auth', CheckRole::class.':admin'])->group(function () {
     Route::get('admin/orders/{order}', [OrderController::class, 'adminShow'])->name('admin.orders.show');
     Route::put('admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status.update');
     Route::put('admin/orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('admin.orders.tracking.update');
+    
+    // Admin customer management routes
+    Route::get('admin/customers', [AdminCustomerController::class, 'index'])->name('admin.customers.index');
+    Route::get('admin/customers/{id}', [AdminCustomerController::class, 'show'])->name('admin.customers.show');
     
     // Homepage management routes
     Route::get('/admin/homepage', [HomepageController::class, 'adminIndex'])->name('admin.homepage.index');

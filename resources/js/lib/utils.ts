@@ -9,6 +9,60 @@ export function cn(...inputs: ClassValue[]): string {
 }
 
 /**
+ * Formats a date string into a human-readable format
+ * @param dateString ISO date string to format
+ * @param options Intl.DateTimeFormatOptions for customizing the output
+ * @returns Formatted date string
+ */
+export function formatDate(dateString: string, options?: Intl.DateTimeFormatOptions): string {
+    if (!dateString) return 'N/A';
+    
+    const date = new Date(dateString);
+    
+    // Return 'Invalid Date' if the date is not valid
+    if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+    }
+    
+    // Default options if none provided
+    const defaultOptions: Intl.DateTimeFormatOptions = options || {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    };
+    
+    return new Intl.DateTimeFormat('en-US', defaultOptions).format(date);
+}
+
+/**
+ * Formats a number as a currency string
+ * @param amount Number to format
+ * @param currency Currency code (default: BDT for Bangladeshi Taka)
+ * @param locale Locale for formatting (default: en-US)
+ * @returns Formatted currency string
+ */
+export function formatCurrency(amount: number | string, currency = 'BDT', locale = 'en-US'): string {
+    if (amount === null || amount === undefined || amount === '') {
+        return 'N/A';
+    }
+    
+    // Convert string to number if needed
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    
+    // Check if the converted amount is a valid number
+    if (isNaN(numAmount)) {
+        return 'Invalid Amount';
+    }
+    
+    return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    }).format(numAmount);
+}
+
+/**
  * Converts a YouTube URL to an embed URL
  * Supports various YouTube URL formats:
  * - https://www.youtube.com/watch?v=VIDEO_ID
