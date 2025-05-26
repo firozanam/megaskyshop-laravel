@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 
 interface ProductImage {
     id: number;
@@ -17,13 +17,24 @@ interface Product {
     main_image?: string;
 }
 
+interface AuthUser {
+    id: number;
+    name: string;
+    email: string;
+}
+
 interface OrderFormSectionProps {
     title: string;
     products: Product[];
     defaultProductId?: number | null;
+    auth?: {
+        user: AuthUser | null;
+    };
 }
 
-export default function OrderFormSection({ title, products, defaultProductId = null }: OrderFormSectionProps) {
+export default function OrderFormSection({ title, products, defaultProductId = null, auth }: OrderFormSectionProps) {
+    const isAuthenticated = auth?.user !== null && auth?.user !== undefined;
+    
     // Find default product from the default product ID if provided
     const findDefaultProduct = (): Product | null => {
         if (defaultProductId && products.length > 0) {
@@ -43,17 +54,29 @@ export default function OrderFormSection({ title, products, defaultProductId = n
         const defaultProduct = findDefaultProduct();
         if (defaultProduct) {
             setSelectedProduct(defaultProduct);
-            setData('product_id', defaultProduct.id);
+            setData('items', [{ id: defaultProduct.id, quantity: quantity }]);
         }
     }, [products, defaultProductId]);
-    
+
+    // Initialize form data with user info if authenticated
     const { data, setData, post, processing, errors } = useForm({
-        name: '',
-        address: '',
-        phone: '',
-        product_id: selectedProduct?.id || '',
-        quantity: quantity,
+        name: isAuthenticated && auth?.user ? auth.user.name : '',
+        email: isAuthenticated && auth?.user ? auth.user.email : '',
+        shipping_address: '',
+        mobile: '',
+        items: selectedProduct ? [{ id: selectedProduct.id, quantity: quantity }] : [],
     });
+    
+    // Update form when authentication status changes
+    useEffect(() => {
+        if (isAuthenticated && auth?.user) {
+            setData(prevData => ({
+                ...prevData,
+                name: auth.user!.name,
+                email: auth.user!.email,
+            }));
+        }
+    }, [isAuthenticated, auth]);
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -64,14 +87,14 @@ export default function OrderFormSection({ title, products, defaultProductId = n
         const product = products.find(p => p.id === productId);
         if (product) {
             setSelectedProduct(product);
-            setData('product_id', product.id);
+            setData('items', [{ id: product.id, quantity: quantity }]);
         }
     };
     
     const handleQuantityChange = (newQuantity: number) => {
         if (newQuantity >= 1) {
             setQuantity(newQuantity);
-            setData('quantity', newQuantity);
+            setData('items', [{ id: selectedProduct?.id || 0, quantity: newQuantity }]);
         }
     };
     
@@ -132,29 +155,42 @@ export default function OrderFormSection({ title, products, defaultProductId = n
                                 <h3 className="text-lg font-semibold mb-4">আপনার ঠিকানা *</h3>
                                 <div className="mb-4">
                                     <textarea
-                                        id="address"
-                                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.address ? 'border-red-500' : 'border-gray-300'}`}
+                                        id="shipping_address"
+                                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.shipping_address ? 'border-red-500' : 'border-gray-300'}`}
                                         placeholder="আপনার ঠিকানা/এলাকার নাম, থানা, জেলা"
                                         rows={4}
-                                        value={data.address}
-                                        onChange={e => setData('address', e.target.value)}
+                                        value={data.shipping_address}
+                                        onChange={e => setData('shipping_address', e.target.value)}
                                         required
                                     ></textarea>
-                                    {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+                                    {errors.shipping_address && <p className="text-red-500 text-sm mt-1">{errors.shipping_address}</p>}
                                 </div>
                                 
                                 <h3 className="text-lg font-semibold mb-4">মোবাইল নাম্বার *</h3>
                                 <div className="mb-4">
                                     <input
                                         type="tel"
-                                        id="phone"
-                                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'}`}
+                                        id="mobile"
+                                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.mobile ? 'border-red-500' : 'border-gray-300'}`}
                                         placeholder="আপনার মোবাইল নাম্বার লিখুন"
-                                        value={data.phone}
-                                        onChange={e => setData('phone', e.target.value)}
+                                        value={data.mobile}
+                                        onChange={e => setData('mobile', e.target.value)}
                                         required
                                     />
-                                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                                    {errors.mobile && <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>}
+                                </div>
+                                
+                                <h3 className="text-lg font-semibold mb-4">ইমেইল (ঐচ্ছিক)</h3>
+                                <div className="mb-4">
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                                        placeholder="আপনার ইমেইল লিখুন"
+                                        value={data.email}
+                                        onChange={e => setData('email', e.target.value)}
+                                    />
+                                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                                 </div>
                             </form>
                         </div>

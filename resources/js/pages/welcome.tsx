@@ -173,6 +173,7 @@ export default function Welcome() {
                         title={sections.order_form.title}
                         products={allProducts}
                         defaultProductId={defaultProductId}
+                        auth={auth}
                     />
                 )}
                 
