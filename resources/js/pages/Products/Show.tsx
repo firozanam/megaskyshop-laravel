@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, usePage, Link, useForm } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import PublicLayout from '@/layouts/public-layout';
 import ProductCard from '@/components/ui/product-card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, MinusIcon, PlusIcon, Check, ShoppingCart, Star, StarHalf } from 'lucide-react';
@@ -164,7 +164,7 @@ export default function Show() {
   };
 
   return (
-    <AppLayout>
+    <PublicLayout>
       <Head title={product.name} />
       
       <div className="container mx-auto px-4 py-8">
@@ -556,6 +556,6 @@ export default function Show() {
           </div>
         )}
       </div>
-    </AppLayout>
+    </PublicLayout>
   );
 } 

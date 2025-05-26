@@ -2,7 +2,7 @@ import React from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import ProductCard from '@/components/ui/product-card';
 import { Pagination } from '@/components/pagination';
-import AppLayout from '@/layouts/app-layout';
+import PublicLayout from '@/layouts/public-layout';
 import { PageProps } from '@inertiajs/core';
 
 interface Product {
@@ -39,7 +39,7 @@ export default function Index() {
   const { products } = usePage<ProductsPageProps>().props;
 
   return (
-    <AppLayout>
+    <PublicLayout>
       <Head title="All Products" />
       
       <div className="container mx-auto px-4 py-8">
@@ -74,6 +74,6 @@ export default function Index() {
           />
         </div>
       </div>
-    </AppLayout>
+    </PublicLayout>
   );
 } 
