@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { Pagination } from '@/components/pagination';
 
 interface Customer {
     customer_id: string;
@@ -431,6 +432,15 @@ export default function CustomersIndex({ customers, filters = {}, flash = {} }: 
                                         </TableRow>
                                     </TableFooter>
                                 </Table>
+                                
+                                {/* Pagination */}
+                                <div className="mt-4 flex items-center justify-center">
+                                    <Pagination 
+                                        currentPage={customers.current_page}
+                                        lastPage={customers.last_page}
+                                        links={customers.links}
+                                    />
+                                </div>
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
