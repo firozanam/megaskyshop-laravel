@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -11,7 +11,9 @@ import {
   CalendarIcon, 
   ArrowLeftIcon, 
   ArrowRightIcon,
-  CubeIcon
+  CubeIcon,
+  Squares2X2Icon,
+  ListBulletIcon
 } from '@heroicons/react/24/outline';
 
 interface OrderItem {
@@ -19,6 +21,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: string;
+  image?: string | null;
 }
 
 interface Order {
@@ -39,7 +42,11 @@ interface OrdersIndexProps {
   };
 }
 
+type ViewMode = 'grid' | 'list';
+
 export default function OrdersIndex({ orders }: OrdersIndexProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -47,6 +54,23 @@ export default function OrdersIndex({ orders }: OrdersIndexProps) {
       month: 'short',
       day: 'numeric',
     });
+  };
+  
+  // Function to get proper image path
+  const getImagePath = (imagePath: string | null) => {
+    if (!imagePath) {
+      return '/images/placeholder.jpg';
+    }
+    
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    if (imagePath.startsWith('/storage/')) {
+      return imagePath;
+    }
+    
+    return `/storage/${imagePath}`;
   };
   
   const getStatusBadge = (status: string) => {
@@ -120,25 +144,202 @@ export default function OrdersIndex({ orders }: OrdersIndexProps) {
     }
   };
   
+  // Calculate total items count for an order
+  const getTotalItems = (items: OrderItem[]) => {
+    return items.reduce((total, item) => total + item.quantity, 0);
+  };
+  
+  // Render list view
+  const renderListView = () => {
+    return (
+      <div className="space-y-6 w-full">
+        {orders.data.map((order) => (
+          <Card key={order.id} className="overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow w-full">
+            <CardHeader className="bg-gray-50 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon(order.status)}
+                  <div>
+                    <CardTitle className="text-lg">Order #{order.id}</CardTitle>
+                    <CardDescription className="flex items-center gap-1">
+                      <CalendarIcon className="h-4 w-4 text-gray-400" />
+                      {formatDate(order.created_at)}
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {getStatusBadge(order.status)}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-5">
+              <div className="mb-6">
+                <div className="mb-3 text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                  <CubeIcon className="h-4 w-4 text-gray-500" />
+                  Order Items:
+                </div>
+                <div className="space-y-2 text-sm">
+                  {order.items.map((item) => (
+                    <div key={item.id} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <div className="h-10 w-10 rounded-md border border-gray-200 overflow-hidden bg-gray-100 flex-shrink-0">
+                          <img 
+                            src={getImagePath(item.image || null)}
+                            alt={item.name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
+                            }}
+                          />
+                        </div>
+                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                          {item.quantity}x
+                        </span>
+                        <span className="font-medium text-gray-900 truncate max-w-[200px] md:max-w-[300px] lg:max-w-none">{item.name}</span>
+                      </div>
+                      <span className="text-gray-700 whitespace-nowrap">৳{item.price} each</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="border-t bg-gray-50 flex items-center justify-between pt-4">
+              <div className="font-semibold text-gray-900">Total: <span className="text-blue-700">৳{order.total}</span></div>
+              <Link href={`/user/orders/${order.id}`}>
+                <Button variant="outline" className="border-blue-200 hover:border-blue-300 hover:bg-blue-50">
+                  <EyeIcon className="mr-2 h-4 w-4" />
+                  View Details
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+  
+  // Render grid view
+  const renderGridView = () => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        {orders.data.map((order) => (
+          <Card key={order.id} className="overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+            <CardHeader className="bg-gray-50 pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {getStatusIcon(order.status)}
+                    <span className="truncate">Order #{order.id}</span>
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-1 mt-1">
+                    <CalendarIcon className="h-4 w-4 text-gray-400" />
+                    {formatDate(order.created_at)}
+                  </CardDescription>
+                </div>
+                <div>
+                  {getStatusBadge(order.status)}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4 flex-grow">
+              <div className="mb-4 text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                <CubeIcon className="h-4 w-4 text-gray-500" />
+                <span>{getTotalItems(order.items)} items</span>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mb-3">
+                {order.items.slice(0, 4).map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="relative h-14 w-14 rounded-md border border-gray-200 overflow-hidden bg-gray-100 flex-shrink-0"
+                    title={item.name}
+                  >
+                    <img 
+                      src={getImagePath(item.image || null)}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
+                      }}
+                    />
+                    {item.quantity > 1 && (
+                      <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                        {item.quantity}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {order.items.length > 4 && (
+                  <div className="h-14 w-14 rounded-md border border-gray-200 bg-gray-100 flex items-center justify-center text-gray-500 text-sm font-medium">
+                    +{order.items.length - 4}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter className="border-t bg-gray-50 flex items-center justify-between pt-3 pb-3 mt-auto">
+              <div className="font-semibold text-gray-900">
+                <span className="text-blue-700">৳{order.total}</span>
+              </div>
+              <Link href={`/user/orders/${order.id}`}>
+                <Button variant="outline" size="sm" className="border-blue-200 hover:border-blue-300 hover:bg-blue-50">
+                  <EyeIcon className="mr-1 h-3 w-3" />
+                  Details
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+  
   return (
     <AppLayout>
       <Head title="My Orders" />
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+      <div className="container mx-auto px-4 sm:px-6 py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
             <p className="text-gray-600 mt-1">View and track your order history</p>
           </div>
-          <Link href="/products">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              Continue Shopping
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {/* View Toggle Buttons */}
+            <div className="flex border border-gray-200 rounded-md overflow-hidden">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center justify-center p-2 ${
+                  viewMode === 'list' 
+                    ? 'bg-blue-50 text-blue-600' 
+                    : 'bg-white text-gray-500 hover:bg-gray-50'
+                }`}
+                title="List view"
+              >
+                <ListBulletIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center justify-center p-2 ${
+                  viewMode === 'grid' 
+                    ? 'bg-blue-50 text-blue-600' 
+                    : 'bg-white text-gray-500 hover:bg-gray-50'
+                }`}
+                title="Grid view"
+              >
+                <Squares2X2Icon className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <Link href="/products">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                Continue Shopping
+              </Button>
+            </Link>
+          </div>
         </div>
         
         {orders.data.length === 0 ? (
-          <Card className="border border-dashed border-gray-300 bg-white shadow-sm">
-            <CardContent className="py-16 text-center">
+          <Card className="border border-dashed border-gray-300 bg-white shadow-sm w-full">
+            <CardContent className="py-12 sm:py-16 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 mb-4">
                 <ShoppingBagIcon className="h-7 w-7 text-blue-600" />
               </div>
@@ -150,58 +351,8 @@ export default function OrdersIndex({ orders }: OrdersIndexProps) {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
-            {orders.data.map((order) => (
-              <Card key={order.id} className="overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="bg-gray-50 pb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(order.status)}
-                      <div>
-                        <CardTitle className="text-lg">Order #{order.id}</CardTitle>
-                        <CardDescription className="flex items-center gap-1">
-                          <CalendarIcon className="h-4 w-4 text-gray-400" />
-                          {formatDate(order.created_at)}
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {getStatusBadge(order.status)}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-5">
-                  <div className="mb-6">
-                    <div className="mb-3 text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                      <CubeIcon className="h-4 w-4 text-gray-500" />
-                      Order Items:
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      {order.items.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
-                          <div className="flex items-center gap-2">
-                            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                              {item.quantity}x
-                            </span>
-                            <span className="font-medium text-gray-900">{item.name}</span>
-                          </div>
-                          <span className="text-gray-700">${item.price} each</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t bg-gray-50 flex items-center justify-between pt-4">
-                  <div className="font-semibold text-gray-900">Total: <span className="text-blue-700">${order.total}</span></div>
-                  <Link href={`/user/orders/${order.id}`}>
-                    <Button variant="outline" className="border-blue-200 hover:border-blue-300 hover:bg-blue-50">
-                      <EyeIcon className="mr-2 h-4 w-4" />
-                      View Details
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            ))}
+          <>
+            {viewMode === 'list' ? renderListView() : renderGridView()}
             
             {/* Pagination */}
             {orders.last_page > 1 && (
@@ -231,7 +382,7 @@ export default function OrdersIndex({ orders }: OrdersIndexProps) {
                 )}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </AppLayout>
