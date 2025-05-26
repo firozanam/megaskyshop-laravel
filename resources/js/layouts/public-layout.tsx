@@ -96,8 +96,8 @@ export default function PublicLayout({ children, title }: PublicLayoutProps) {
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Legal</h4>
                 <ul className="mt-4 space-y-2">
-                  <li><Link href="/privacy" className="text-gray-600 hover:text-gray-900">Privacy Policy</Link></li>
-                  <li><Link href="/terms" className="text-gray-600 hover:text-gray-900">Terms of Service</Link></li>
+                  <li><Link href="/privacy-policy" className="text-gray-600 hover:text-gray-900">Privacy Policy</Link></li>
+                  <li><Link href="/terms-of-service" className="text-gray-600 hover:text-gray-900">Terms of Service</Link></li>
                 </ul>
               </div>
             </div>

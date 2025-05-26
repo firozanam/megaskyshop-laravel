@@ -142,6 +142,12 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::post('/products/{product}/review', [ProductController::class, 'addReview'])->name('products.review');
 
+// Static pages
+Route::inertia('/about', 'about')->name('about');
+Route::inertia('/contact', 'contact')->name('contact');
+Route::inertia('/privacy-policy', 'privacy-policy')->name('privacy.policy');
+Route::inertia('/terms-of-service', 'terms-of-service')->name('terms.service');
+
 // Public category routes
 Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 Route::get('/api/categories/navigation', [CategoryController::class, 'getNavigation'])->name('api.categories.navigation');
