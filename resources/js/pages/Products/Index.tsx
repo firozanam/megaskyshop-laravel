@@ -1,9 +1,18 @@
 import React from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import ProductCard from '@/components/ui/product-card';
 import { Pagination } from '@/components/pagination';
 import PublicLayout from '@/layouts/public-layout';
 import { PageProps } from '@inertiajs/core';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 
 interface Product {
   id: number;
@@ -33,10 +42,24 @@ interface ProductsPageProps extends PageProps {
     }[];
     total: number;
   };
+  filters?: {
+    sort?: string;
+    category_id?: string;
+    search?: string;
+  };
 }
 
 export default function Index() {
-  const { products } = usePage<ProductsPageProps>().props;
+  const { products, filters = {} } = usePage<ProductsPageProps>().props;
+
+  const handleSortChange = (value: string) => {
+    // Update the URL with the new sort parameter without refreshing the page
+    router.get(
+      route('products.index'),
+      { ...filters, sort: value },
+      { preserveState: true, preserveScroll: true }
+    );
+  };
 
   return (
     <PublicLayout>
@@ -49,9 +72,28 @@ export default function Index() {
             <p className="text-gray-600 mt-1">{products.total} products available</p>
           </div>
           
-          {/* Placeholder for future filters and search */}
+          {/* Sort dropdown */}
           <div className="mt-4 sm:mt-0">
-            {/* Search and filters will be added later */}
+            <div className="flex items-center gap-2">
+              <ArrowsUpDownIcon className="h-5 w-5 text-gray-500" />
+              <Select
+                value={filters.sort || 'newest'}
+                onValueChange={handleSortChange}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                    <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                    <SelectItem value="name_asc">Name: A to Z</SelectItem>
+                    <SelectItem value="name_desc">Name: Z to A</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         
