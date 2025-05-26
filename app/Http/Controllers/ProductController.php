@@ -26,13 +26,10 @@ class ProductController extends Controller
             $query->where('category_id', $request->category_id);
         }
         
-        // Search by name or description if provided
+        // Search by product name only
         if ($request->has('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
+            $query->where('name', 'like', "%{$search}%");
         }
         
         // Sort by price, name, or newest
