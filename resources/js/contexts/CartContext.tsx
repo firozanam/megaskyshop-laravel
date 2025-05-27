@@ -1,5 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+// Utility function to ensure numeric values
+const ensureNumeric = (value: string | number | null | undefined): number => {
+  if (value === null || value === undefined) {
+    return 0;
+  }
+  return typeof value === 'string' ? parseFloat(value) : value;
+};
+
 interface CartItem {
   id: number;
   name: string;

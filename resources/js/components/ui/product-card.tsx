@@ -10,17 +10,23 @@ export interface ProductImage {
   url?: string;
   image_path?: string;
   is_main?: boolean;
+  product_id?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ProductProps {
   id: number;
   name: string;
-  price: number;
-  sale_price?: number | null;
-  slug: string;
+  price: number | string;
+  sale_price?: number | string | null;
+  slug?: string;
   images: ProductImage[];
   stock?: number;
   main_image?: string;
+  category_id?: number;
+  avg_rating?: string | number;
+  description?: string;
 }
 
 interface ProductCardProps {
@@ -29,6 +35,14 @@ interface ProductCardProps {
   priority?: boolean;
   showActions?: boolean;
 }
+
+// Utility function to ensure numeric values
+const ensureNumeric = (value: string | number | null | undefined): number => {
+  if (value === null || value === undefined) {
+    return 0;
+  }
+  return typeof value === 'string' ? parseFloat(value) : value;
+};
 
 export default function ProductCard({ 
   product, 
@@ -58,10 +72,10 @@ export default function ProductCard({
       addItem({
         id: product.id,
         name: product.name,
-        price: product.price,
-        sale_price: product.sale_price || undefined,
+        price: ensureNumeric(product.price),
+        sale_price: product.sale_price ? ensureNumeric(product.sale_price) : undefined,
         image: imageUrl,
-        slug: product.slug,
+        slug: product.slug || `product-${product.id}`,
         stock: product.stock,
       }, 1);
     } catch (error) {
@@ -113,8 +127,11 @@ export default function ProductCard({
     return '/images/placeholder.jpg';
   };
   
-  const discount = product.sale_price && product.price 
-    ? Math.round(((product.price - product.sale_price) / product.price) * 100) 
+  const price = ensureNumeric(product.price);
+  const salePrice = product.sale_price ? ensureNumeric(product.sale_price) : null;
+  
+  const discount = salePrice && price 
+    ? Math.round(((price - salePrice) / price) * 100) 
     : 0;
 
   return (
@@ -170,13 +187,13 @@ export default function ProductCard({
         <div className="mt-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="font-bold text-lg">
-              {product.sale_price ? (
+              {salePrice ? (
                 <>
-                  <span className="text-gray-400 line-through mr-2 text-sm">৳{product.price.toFixed(2)}</span>
-                  <span className="text-gray-800">৳{product.sale_price.toFixed(2)}</span>
+                  <span className="text-gray-400 line-through mr-2 text-sm">৳{price.toFixed(2)}</span>
+                  <span className="text-gray-800">৳{salePrice.toFixed(2)}</span>
                 </>
               ) : (
-                <span className="text-gray-800">৳{product.price.toFixed(2)}</span>
+                <span className="text-gray-800">৳{price.toFixed(2)}</span>
               )}
             </div>
             

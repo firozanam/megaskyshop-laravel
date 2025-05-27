@@ -10,6 +10,8 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProductSeeder extends Seeder
 {
@@ -18,12 +20,26 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        // Clear previous products if any
-        $this->command->info('Clearing existing products...');
-        Product::truncate();
+        // Disable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        // Truncate dependent tables first
+        if (Schema::hasTable('featured_products')) {
+            DB::table('featured_products')->truncate();
+        }
+        if (Schema::hasTable('order_items')) {
+            DB::table('order_items')->truncate();
+        }
+        if (Schema::hasTable('wishlists')) {
+            DB::table('wishlists')->truncate();
+        }
+        // Truncate product-related tables
         ProductImage::truncate();
         ProductMetaTag::truncate();
         Review::truncate();
+        Product::truncate();
+        // Re-enable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        $this->command->info('Clearing existing products...');
         
         $csvFile = storage_path('app/public/megaskyshop.products.csv');
         

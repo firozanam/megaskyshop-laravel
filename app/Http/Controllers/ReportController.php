@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ReportController extends Controller
 {
@@ -16,60 +17,94 @@ class ReportController extends Controller
      */
     public function index(Request $request)
     {
-        // Get time range from request (default to 30 days)
-        $days = $request->input('days', 30);
-        
-        // Get summary statistics
-        $totalUsers = User::count();
-        $totalProducts = Product::count();
-        
-        // Get stats for the specified time period
-        $totalOrders = Order::whereRaw("date(created_at) >= date('now', '-{$days} days')")->count();
-        $totalRevenue = Order::whereRaw("date(created_at) >= date('now', '-{$days} days')")->sum('total') ?? 0;
-        
-        // Get top selling products data for the specified time period
-        $topSellingProducts = DB::table('order_items')
-            ->select('products.name', DB::raw('SUM(order_items.quantity) as sales'))
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereRaw("date(orders.created_at) >= date('now', '-{$days} days')")
-            ->groupBy('products.id', 'products.name')
-            ->orderBy('sales', 'desc')
-            ->limit(5)
-            ->get();
-        
-        // Get order trend data
-        $orderTrend = $this->getOrderTrend($days);
-        
-        // Get revenue trend data
-        $revenueTrend = $this->getRevenueTrend($days);
-        
-        return Inertia::render('admin/reports', [
-            'totalUsers' => $totalUsers,
-            'totalProducts' => $totalProducts,
-            'totalOrders' => $totalOrders,
-            'totalRevenue' => $totalRevenue,
-            'topSellingProducts' => $topSellingProducts,
-            'orderTrend' => $orderTrend,
-            'revenueTrend' => $revenueTrend,
-            'timeRange' => (string) $days,
-        ]);
+        try {
+            // Get time range from request (default to 30 days)
+            $days = $request->input('days', 30);
+            
+            // Get summary statistics
+            $totalUsers = User::count();
+            $totalProducts = Product::count();
+            
+            // Get cutoff date
+            $cutoffDate = Carbon::now()->subDays($days)->startOfDay();
+            
+            // Get stats for the specified time period
+            $totalOrders = Order::where('created_at', '>=', $cutoffDate)->count();
+            $totalRevenue = Order::where('created_at', '>=', $cutoffDate)->sum('total') ?? 0;
+            
+            // Get top selling products data for the specified time period
+            $topSellingProducts = DB::table('order_items')
+                ->select('products.name', DB::raw('SUM(order_items.quantity) as sales'))
+                ->join('products', 'order_items.product_id', '=', 'products.id')
+                ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                ->where('orders.created_at', '>=', $cutoffDate)
+                ->groupBy('products.id', 'products.name')
+                ->orderBy('sales', 'desc')
+                ->limit(5)
+                ->get();
+            
+            // Get order trend data
+            $orderTrend = $this->getOrderTrend($days);
+            
+            // Get revenue trend data
+            $revenueTrend = $this->getRevenueTrend($days);
+            
+            return Inertia::render('admin/reports', [
+                'totalUsers' => $totalUsers,
+                'totalProducts' => $totalProducts,
+                'totalOrders' => $totalOrders,
+                'totalRevenue' => $totalRevenue,
+                'topSellingProducts' => $topSellingProducts,
+                'orderTrend' => $orderTrend,
+                'revenueTrend' => $revenueTrend,
+                'timeRange' => (string) $days,
+            ]);
+        } catch (\Exception $e) {
+            // Log the exception
+            \Log::error('Reports error: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            // Return empty data with error message
+            return Inertia::render('admin/reports', [
+                'totalUsers' => 0,
+                'totalProducts' => 0,
+                'totalOrders' => 0,
+                'totalRevenue' => 0,
+                'topSellingProducts' => [],
+                'orderTrend' => [],
+                'revenueTrend' => [],
+                'timeRange' => (string) $days,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
     
     /**
      * Get order trend data for the specified number of days.
      */
-    private function getOrderTrend($days = 30)
+    public function getOrderTrend($days = 30)
     {
         // For 'This Day', show hourly data
         if ($days == 1) {
             return $this->getHourlyOrderTrend();
         }
         
-        $period = now()->subDays($days)->daysUntil(now());
+        // Replace daysUntil with a manual date generation approach
+        $cutoffDate = Carbon::now()->subDays($days)->startOfDay();
+        $endDate = Carbon::now();
         
-        $ordersByDate = Order::selectRaw('date(created_at) as date, COUNT(*) as count')
-            ->whereRaw("date(created_at) >= date('now', '-{$days} days')")
+        // Generate date range manually
+        $period = [];
+        for ($date = clone $cutoffDate; $date->lte($endDate); $date->addDay()) {
+            $period[] = clone $date;
+        }
+        
+        // Get orders grouped by date
+        $ordersByDate = Order::select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('created_at', '>=', $cutoffDate)
             ->groupBy('date')
             ->pluck('count', 'date')
             ->toArray();
@@ -89,17 +124,29 @@ class ReportController extends Controller
     /**
      * Get revenue trend data for the specified number of days.
      */
-    private function getRevenueTrend($days = 30)
+    public function getRevenueTrend($days = 30)
     {
         // For 'This Day', show hourly data
         if ($days == 1) {
             return $this->getHourlyRevenueTrend();
         }
         
-        $period = now()->subDays($days)->daysUntil(now());
+        // Replace daysUntil with a manual date generation approach
+        $cutoffDate = Carbon::now()->subDays($days)->startOfDay();
+        $endDate = Carbon::now();
         
-        $revenueByDate = Order::selectRaw('date(created_at) as date, SUM(total) as sum')
-            ->whereRaw("date(created_at) >= date('now', '-{$days} days')")
+        // Generate date range manually
+        $period = [];
+        for ($date = clone $cutoffDate; $date->lte($endDate); $date->addDay()) {
+            $period[] = clone $date;
+        }
+        
+        // Get revenue grouped by date
+        $revenueByDate = Order::select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(total) as sum')
+            )
+            ->where('created_at', '>=', $cutoffDate)
             ->groupBy('date')
             ->pluck('sum', 'date')
             ->toArray();
@@ -119,13 +166,17 @@ class ReportController extends Controller
     /**
      * Get hourly order trend data for the current day.
      */
-    private function getHourlyOrderTrend()
+    public function getHourlyOrderTrend()
     {
-        $today = now()->startOfDay()->toDateString();
+        $today = now()->startOfDay();
         $hours = range(0, 23);
         
-        $ordersByHour = Order::selectRaw("strftime('%H', created_at) as hour, COUNT(*) as count")
-            ->whereRaw("date(created_at) = ?", [$today])
+        // Get orders grouped by hour for today
+        $ordersByHour = Order::select(
+                DB::raw('HOUR(created_at) as hour'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->whereDate('created_at', $today->toDateString())
             ->groupBy('hour')
             ->pluck('count', 'hour')
             ->toArray();
@@ -135,7 +186,7 @@ class ReportController extends Controller
             $hourDisplay = str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00';
             $result[] = [
                 'name' => $hourDisplay,
-                'orders' => $ordersByHour[str_pad($hour, 2, '0', STR_PAD_LEFT)] ?? 0,
+                'orders' => $ordersByHour[$hour] ?? 0,
             ];
         }
         
@@ -145,13 +196,17 @@ class ReportController extends Controller
     /**
      * Get hourly revenue trend data for the current day.
      */
-    private function getHourlyRevenueTrend()
+    public function getHourlyRevenueTrend()
     {
-        $today = now()->startOfDay()->toDateString();
+        $today = now()->startOfDay();
         $hours = range(0, 23);
         
-        $revenueByHour = Order::selectRaw("strftime('%H', created_at) as hour, SUM(total) as sum")
-            ->whereRaw("date(created_at) = ?", [$today])
+        // Get revenue grouped by hour for today
+        $revenueByHour = Order::select(
+                DB::raw('HOUR(created_at) as hour'),
+                DB::raw('SUM(total) as sum')
+            )
+            ->whereDate('created_at', $today->toDateString())
             ->groupBy('hour')
             ->pluck('sum', 'hour')
             ->toArray();
@@ -161,7 +216,7 @@ class ReportController extends Controller
             $hourDisplay = str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00';
             $result[] = [
                 'name' => $hourDisplay,
-                'revenue' => $revenueByHour[str_pad($hour, 2, '0', STR_PAD_LEFT)] ?? 0,
+                'revenue' => $revenueByHour[$hour] ?? 0,
             ];
         }
         

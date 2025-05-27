@@ -271,5 +271,120 @@ Route::get('/debug/pricing-section', function() {
     ]);
 });
 
+// Debug route for reports data
+Route::get('/debug/reports-data', function() {
+    $days = 30;
+    $controller = new \App\Http\Controllers\ReportController();
+    $reflectionMethod = new \ReflectionMethod($controller, 'index');
+    $reflectionMethod->setAccessible(true);
+    
+    $request = new \Illuminate\Http\Request();
+    $request->merge(['days' => $days]);
+    
+    $result = $reflectionMethod->invoke($controller, $request);
+    
+    // Extract the data props
+    $data = $result->getData()['props'];
+    
+    return response()->json([
+        'data' => $data,
+        'orderTrend_sample' => array_slice($data['orderTrend'] ?? [], 0, 3),
+        'revenueTrend_sample' => array_slice($data['revenueTrend'] ?? [], 0, 3),
+        'topSellingProducts_sample' => array_slice($data['topSellingProducts'] ?? [], 0, 3)
+    ]);
+});
+
+// Debug endpoint for ReportController data
+Route::get('/debug/report-data', function() {
+    $controller = new \App\Http\Controllers\ReportController();
+    
+    try {
+        // Get the data directly from controller methods
+        $days = 30;
+        $cutoffDate = \Carbon\Carbon::now()->subDays($days)->startOfDay();
+        
+        // Get stats for the specified time period
+        $totalUsers = \App\Models\User::count();
+        $totalProducts = \App\Models\Product::count();
+        $totalOrders = \App\Models\Order::where('created_at', '>=', $cutoffDate)->count();
+        $totalRevenue = \App\Models\Order::where('created_at', '>=', $cutoffDate)->sum('total') ?? 0;
+        
+        // Get trend data using controller's methods
+        $orderTrend = $controller->getOrderTrend($days);
+        $revenueTrend = $controller->getRevenueTrend($days);
+        
+        // Get top selling products data
+        $topSellingProducts = \Illuminate\Support\Facades\DB::table('order_items')
+            ->select('products.name', \Illuminate\Support\Facades\DB::raw('SUM(order_items.quantity) as sales'))
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->where('orders.created_at', '>=', $cutoffDate)
+            ->groupBy('products.id', 'products.name')
+            ->orderBy('sales', 'desc')
+            ->limit(5)
+            ->get();
+        
+        return response()->json([
+            'status' => 'success',
+            'summary' => [
+                'totalUsers' => $totalUsers,
+                'totalProducts' => $totalProducts,
+                'totalOrders' => $totalOrders,
+                'totalRevenue' => $totalRevenue,
+            ],
+            'orderTrend_sample' => array_slice($orderTrend, 0, 3),
+            'revenueTrend_sample' => array_slice($revenueTrend, 0, 3),
+            'topSellingProducts_sample' => array_slice(json_decode(json_encode($topSellingProducts), true), 0, 3),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+// Special debug route for Reports component rendering
+Route::get('/debug/reports-component', function() {
+    $days = 30;
+    $controller = new \App\Http\Controllers\ReportController();
+    
+    // Get the data directly from controller methods
+    $totalUsers = \App\Models\User::count();
+    $totalProducts = \App\Models\Product::count();
+    $cutoffDate = \Carbon\Carbon::now()->subDays($days)->startOfDay();
+    $totalOrders = \App\Models\Order::where('created_at', '>=', $cutoffDate)->count();
+    $totalRevenue = \App\Models\Order::where('created_at', '>=', $cutoffDate)->sum('total') ?? 0;
+    
+    // Get trend data
+    $orderTrend = $controller->getOrderTrend($days);
+    $revenueTrend = $controller->getRevenueTrend($days);
+    
+    // Get top selling products data
+    $topSellingProducts = \Illuminate\Support\Facades\DB::table('order_items')
+        ->select('products.name', \Illuminate\Support\Facades\DB::raw('SUM(order_items.quantity) as sales'))
+        ->join('products', 'order_items.product_id', '=', 'products.id')
+        ->join('orders', 'order_items.order_id', '=', 'orders.id')
+        ->where('orders.created_at', '>=', $cutoffDate)
+        ->groupBy('products.id', 'products.name')
+        ->orderBy('sales', 'desc')
+        ->limit(5)
+        ->get();
+    
+    return \Inertia\Inertia::render('admin/reports', [
+        'totalUsers' => $totalUsers,
+        'totalProducts' => $totalProducts,
+        'totalOrders' => $totalOrders,
+        'totalRevenue' => $totalRevenue,
+        'topSellingProducts' => $topSellingProducts,
+        'orderTrend' => $orderTrend,
+        'revenueTrend' => $revenueTrend,
+        'timeRange' => (string) $days,
+    ]);
+})->middleware(['web']);
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

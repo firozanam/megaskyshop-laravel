@@ -19,17 +19,39 @@ import { ArrowsUpDownIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/rea
 interface Product {
   id: number;
   name: string;
-  price: number;
-  sale_price?: number | null;
-  slug: string;
+  price: number | string;
+  sale_price?: number | string | null;
+  slug?: string;
+  category?: {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
+    parent_id?: number;
+    image_path?: string;
+    is_active?: number;
+    sort_order?: number;
+    created_at?: string;
+    updated_at?: string;
+  };
+  category_id?: number;
   images: Array<{
     id: number;
     url?: string;
     image_path?: string;
     is_main?: boolean;
+    product_id?: number;
+    created_at?: string;
+    updated_at?: string;
   }>;
   stock?: number;
   main_image?: string;
+  avg_rating?: string | number;
+  description?: string;
+  meta_description?: string;
+  meta_title?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface ProductsPageProps extends PageProps {
@@ -43,7 +65,16 @@ interface ProductsPageProps extends PageProps {
       active: boolean;
     }[];
     total: number;
+    from?: number;
+    to?: number;
+    per_page?: number;
+    path?: string;
+    first_page_url?: string;
+    last_page_url?: string;
+    next_page_url?: string | null;
+    prev_page_url?: string | null;
   };
+  categories?: any[];
   filters?: {
     sort?: string;
     category_id?: string;

@@ -23,24 +23,25 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 
 interface TopSellingProduct {
   name: string;
-  sales: number;
+  sales: number | string;
 }
 
 interface TrendDataPoint {
   name: string;
   orders?: number;
-  revenue?: number;
+  revenue?: number | string;
 }
 
 interface ReportsProps {
   totalUsers?: number;
   totalProducts?: number;
   totalOrders?: number;
-  totalRevenue?: number;
+  totalRevenue?: number | string;
   topSellingProducts?: TopSellingProduct[];
   orderTrend?: TrendDataPoint[];
   revenueTrend?: TrendDataPoint[];
   timeRange?: string;
+  error?: string;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -54,18 +55,44 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
+// Helper function to ensure numeric data
+const ensureNumeric = (value: number | string | undefined): number => {
+  if (value === undefined) return 0;
+  if (typeof value === 'string') return parseFloat(value) || 0;
+  return value;
+};
+
 export default function Reports({ 
   totalUsers = 0, 
-  totalProducts = 18, 
-  totalOrders = 5, 
-  totalRevenue = 6459.00,
+  totalProducts = 0, 
+  totalOrders = 0, 
+  totalRevenue = 0,
   topSellingProducts = [],
   orderTrend = [],
   revenueTrend = [],
-  timeRange: initialTimeRange = '30'
+  timeRange: initialTimeRange = '30',
+  error
 }: ReportsProps) {
   const [timeRange, setTimeRange] = useState(initialTimeRange);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Process data to ensure all values are numeric
+  const processedTopProducts = topSellingProducts.map(product => ({
+    ...product,
+    sales: ensureNumeric(product.sales)
+  }));
+
+  const processedOrderTrend = orderTrend.map(item => ({
+    ...item,
+    orders: ensureNumeric(item.orders)
+  }));
+
+  const processedRevenueTrend = revenueTrend.map(item => ({
+    ...item,
+    revenue: ensureNumeric(item.revenue)
+  }));
+
+  const numericTotalRevenue = ensureNumeric(totalRevenue);
 
   // Update data when time range changes
   useEffect(() => {
@@ -96,17 +123,17 @@ export default function Reports({
       let csv = 'Type,Date,Value\n';
       
       // Add order trend data
-      orderTrend.forEach(item => {
+      processedOrderTrend.forEach(item => {
         csv += `Order,${item.name},${item.orders}\n`;
       });
       
       // Add revenue trend data
-      revenueTrend.forEach(item => {
+      processedRevenueTrend.forEach(item => {
         csv += `Revenue,${item.name},${item.revenue}\n`;
       });
       
       // Add top selling products
-      topSellingProducts.forEach(item => {
+      processedTopProducts.forEach(item => {
         csv += `Product,"${item.name}",${item.sales}\n`;
       });
       
@@ -114,7 +141,7 @@ export default function Reports({
       csv += `Summary,Total Users,${totalUsers}\n`;
       csv += `Summary,Total Products,${totalProducts}\n`;
       csv += `Summary,Total Orders,${totalOrders}\n`;
-      csv += `Summary,Total Revenue,${totalRevenue}\n`;
+      csv += `Summary,Total Revenue,${numericTotalRevenue}\n`;
       
       return csv;
     };
@@ -139,6 +166,13 @@ export default function Reports({
       <Head title="Admin Reports" />
 
       <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong className="font-bold">Error: </strong>
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
@@ -222,7 +256,7 @@ export default function Reports({
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">৳{totalRevenue.toFixed(2)}</div>
+              <div className="text-2xl font-bold">৳{numericTotalRevenue.toFixed(2)}</div>
               <p className="text-xs text-emerald-500">+199.03% from last period</p>
             </CardContent>
           </Card>
@@ -241,7 +275,7 @@ export default function Reports({
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={orderTrend}
+                    data={processedOrderTrend}
                     margin={{
                       top: 5,
                       right: 30,
@@ -278,7 +312,7 @@ export default function Reports({
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
-                    data={revenueTrend}
+                    data={processedRevenueTrend}
                     margin={{
                       top: 5,
                       right: 30,
@@ -317,7 +351,7 @@ export default function Reports({
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={topSellingProducts}
+                  data={processedTopProducts}
                   margin={{
                     top: 5,
                     right: 30,
