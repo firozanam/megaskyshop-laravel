@@ -108,7 +108,7 @@ export default function Show() {
         content_ids: [product.id.toString()],
         content_name: product.name,
         content_category: 'Product',
-        value: product.sale_price || product.price,
+        value: product.sale_price ? parseFloat(product.sale_price.toString()) : parseFloat(product.price.toString()),
         currency: 'BDT'
       });
     }
@@ -131,12 +131,16 @@ export default function Show() {
   const formErrors = errors as unknown as ReviewFormErrors;
   
   const getImageUrl = (image: ProductImage): string => {
-    if (image.image_path) {
-      return `/storage/${image.image_path}`;
-    } else if (image.url) {
-      return `/storage/${image.url}`;
-    } else if (product.main_image) {
-      return `/storage/${product.main_image}`;
+    try {
+      if (image && image.image_path) {
+        return `/storage/${image.image_path}`;
+      } else if (image && image.url) {
+        return `/storage/${image.url}`;
+      } else if (product.main_image) {
+        return `/storage/${product.main_image}`;
+      }
+    } catch (error) {
+      console.error('Error getting image URL:', error);
     }
     return '/images/placeholder.jpg';
   };
@@ -148,7 +152,7 @@ export default function Show() {
       : '/images/placeholder.jpg');
   
   const discount = product.sale_price && product.price 
-    ? Math.round(((product.price - product.sale_price) / product.price) * 100) 
+    ? Math.round(((parseFloat(product.price.toString()) - parseFloat(product.sale_price.toString())) / parseFloat(product.price.toString())) * 100) 
     : 0;
     
   const inStock = product.stock === undefined || product.stock > 0;
@@ -164,7 +168,7 @@ export default function Show() {
   const handleAddToCart = () => {
     setAddingToCart(true);
     
-    // Get the main image URL
+    // Get the main image URL using our getImageUrl function
     const imageUrl = product.images && product.images.length > 0 
       ? getImageUrl(product.images[0]) 
       : product.main_image 
@@ -175,8 +179,8 @@ export default function Show() {
     addItem({
       id: product.id,
       name: product.name,
-      price: product.price,
-      sale_price: product.sale_price || undefined,
+      price: parseFloat(product.price.toString()),
+      sale_price: product.sale_price ? parseFloat(product.sale_price.toString()) : undefined,
       image: imageUrl,
       slug: product.slug,
       stock: product.stock,
@@ -188,13 +192,13 @@ export default function Show() {
         content_type: 'product',
         content_ids: [product.id.toString()],
         content_name: product.name,
-        value: (product.sale_price || product.price) * quantity,
+        value: (product.sale_price ? parseFloat(product.sale_price.toString()) : parseFloat(product.price.toString())) * quantity,
         currency: 'BDT',
         contents: [
           {
             id: product.id.toString(),
             quantity: quantity,
-            item_price: product.sale_price || product.price
+            item_price: product.sale_price ? parseFloat(product.sale_price.toString()) : parseFloat(product.price.toString())
           }
         ]
       });
@@ -249,7 +253,7 @@ export default function Show() {
     setProcessingBuyNow(true);
     
     try {
-      // First add to cart
+      // First add to cart using our getImageUrl function
       const imageUrl = product.images && product.images.length > 0 
         ? getImageUrl(product.images[0]) 
         : product.main_image 
@@ -259,8 +263,8 @@ export default function Show() {
       addItem({
         id: product.id,
         name: product.name,
-        price: product.price,
-        sale_price: product.sale_price || undefined,
+        price: parseFloat(product.price.toString()),
+        sale_price: product.sale_price ? parseFloat(product.sale_price.toString()) : undefined,
         image: imageUrl,
         slug: product.slug,
         stock: product.stock,
@@ -272,13 +276,13 @@ export default function Show() {
           content_type: 'product',
           content_ids: [product.id.toString()],
           content_name: product.name,
-          value: (product.sale_price || product.price) * quantity,
+          value: (product.sale_price ? parseFloat(product.sale_price.toString()) : parseFloat(product.price.toString())) * quantity,
           currency: 'BDT',
           contents: [
             {
               id: product.id.toString(),
               quantity: quantity,
-              item_price: product.sale_price || product.price
+              item_price: product.sale_price ? parseFloat(product.sale_price.toString()) : parseFloat(product.price.toString())
             }
           ]
         });
@@ -349,6 +353,9 @@ export default function Show() {
                   src={mainImageUrl} 
                   alt={product.name} 
                   className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/placeholder.jpg';
+                  }}
                 />
               </div>
               
@@ -369,6 +376,9 @@ export default function Show() {
                         src={getImageUrl(image)}
                         alt={`${product.name} - Image ${index + 1}`}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/placeholder.jpg';
+                        }}
                       />
                     </button>
                   ))}
@@ -398,7 +408,7 @@ export default function Show() {
                   {renderStars(product.avg_rating || 0)}
                 </div>
                 <span className="text-sm text-gray-600">
-                  {product.avg_rating ? product.avg_rating.toFixed(1) : '0'} 
+                  {product.avg_rating ? parseFloat(product.avg_rating.toString()).toFixed(1) : '0'} 
                   <span className="mx-1">•</span>
                   <Link href="#reviews" className="text-blue-600 hover:underline">
                     {product.reviews?.length || 0} reviews
@@ -410,14 +420,14 @@ export default function Show() {
               <div className="mb-6 bg-blue-50 rounded-lg px-4 py-3 shadow-sm">
                 {product.sale_price ? (
                   <div className="flex items-center">
-                    <span className="text-gray-400 line-through mr-3 text-lg">৳{product.price.toFixed(2)}</span>
-                    <span className="text-3xl font-bold text-blue-700">৳{product.sale_price.toFixed(2)}</span>
+                    <span className="text-gray-400 line-through mr-3 text-lg">৳{parseFloat(product.price.toString()).toFixed(2)}</span>
+                    <span className="text-3xl font-bold text-blue-700">৳{parseFloat(product.sale_price.toString()).toFixed(2)}</span>
                     <span className="ml-2 text-sm text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
-                      Save ৳{(product.price - product.sale_price).toFixed(2)}
+                      Save ৳{(parseFloat(product.price.toString()) - parseFloat(product.sale_price.toString())).toFixed(2)}
                     </span>
                   </div>
                 ) : (
-                  <span className="text-3xl font-bold text-blue-700">৳{product.price.toFixed(2)}</span>
+                  <span className="text-3xl font-bold text-blue-700">৳{parseFloat(product.price.toString()).toFixed(2)}</span>
                 )}
               </div>
               
@@ -588,7 +598,7 @@ export default function Show() {
           <div className="mb-8 flex flex-col md:flex-row gap-8 bg-gray-50 rounded-xl p-6">
             <div className="text-center">
               <div className="text-5xl font-bold text-gray-900 mb-2">
-                {product.avg_rating ? product.avg_rating.toFixed(1) : '0'}
+                {product.avg_rating ? parseFloat(product.avg_rating.toString()).toFixed(1) : '0'}
               </div>
               <div className="flex justify-center mb-1">
                 {renderStars(product.avg_rating || 0, 24)}

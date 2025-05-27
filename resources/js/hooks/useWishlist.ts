@@ -17,7 +17,10 @@ export default function useWishlist(productId: number) {
         });
         setIsInWishlist(response.data.in_wishlist);
       } catch (error) {
-        console.error('Error checking wishlist status:', error);
+        // Don't log 401 errors as they are expected for non-authenticated users
+        if (!(axios.isAxiosError(error) && error.response?.status === 401)) {
+          console.error('Error checking wishlist status:', error);
+        }
         setIsInWishlist(false);
       } finally {
         setIsLoading(false);
