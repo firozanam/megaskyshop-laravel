@@ -131,7 +131,7 @@ export default function Dashboard({ recentOrders = [], recentlyViewedProducts = 
                         </div>
                     </Link>
                     
-                    <Link href="/user/profile" className="bg-white rounded-xl shadow p-6 flex items-center gap-4 hover:bg-gray-50 transition-colors">
+                    <Link href="/settings/profile" className="bg-white rounded-xl shadow p-6 flex items-center gap-4 hover:bg-gray-50 transition-colors">
                         <div className="bg-green-100 p-3 rounded-full">
                             <UserCircleIcon className="h-6 w-6 text-green-600" />
                         </div>
@@ -201,29 +201,19 @@ export default function Dashboard({ recentOrders = [], recentlyViewedProducts = 
                             <CreditCardIcon className="h-5 w-5 text-gray-600" />
                             <h2 className="text-lg font-semibold text-gray-900">Payment Methods</h2>
                         </div>
-                        <div className="border rounded-lg p-4 flex items-center justify-between">
+                        <div className="border rounded-lg p-4 flex items-center justify-center bg-gray-50">
                             <div className="flex items-center gap-3">
-                                <div className="bg-gray-200 rounded p-1">
-                                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
-                                        <rect width="24" height="24" rx="4" fill="#016FD0" />
-                                        <path d="M12 18V6H22V18H12Z" fill="#016FD0" />
-                                        <path d="M13.86 16.13H14.98V9.87H13.86V16.13Z" fill="white" />
-                                        <path d="M19.23 9.87C18.77 9.65 18.13 9.43 17.35 9.43C15.8 9.43 14.71 10.19 14.71 11.33C14.71 12.22 15.47 12.7 16.45 13.09C17.42 13.48 17.73 13.74 17.73 14.09C17.73 14.61 17.16 14.87 16.62 14.87C15.93 14.87 15.51 14.74 14.89 14.44L14.63 14.31L14.37 16.04C14.89 16.3 15.8 16.52 16.71 16.52C18.38 16.52 19.45 15.78 19.45 14.52C19.45 13.83 19.01 13.26 17.73 12.74C16.97 12.39 16.49 12.17 16.49 11.78C16.49 11.43 16.84 11.08 17.6 11.08C18.25 11.08 18.73 11.21 19.1 11.39L19.28 11.47L19.54 9.83L19.23 9.87Z" fill="white" />
-                                        <path d="M21.94 9.87H20.44C20.05 9.87 19.75 9.96 19.58 10.36L17.47 16.13H19.19L19.49 15.26H21.59L21.76 16.13H23.31L21.94 9.87ZM19.88 13.96C19.88 13.96 20.44 12.39 20.53 12.13C20.53 12.13 20.61 11.91 20.7 11.74L20.79 12.09C20.79 12.09 21.15 13.83 21.24 14.09L19.88 13.96Z" fill="white" />
-                                        <path d="M9.75 9.87L8.16 14.09L8.03 13.48C7.77 12.61 6.89 11.65 5.92 11.17L7.42 16.13H9.14L11.73 9.87H9.75Z" fill="white" />
-                                        <path d="M6.63 9.87H3.96L3.87 10.01C6.02 10.53 7.42 11.82 7.94 13.48L7.33 10.36C7.25 10.01 6.98 9.87 6.63 9.87Z" fill="white" />
+                                <div className="bg-green-100 p-2 rounded-full">
+                                    <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-gray-600 text-sm">Visa ending in 4242</p>
-                                    <p className="text-gray-500 text-xs">Expires 12/24</p>
+                                    <p className="text-gray-900 font-medium">Cash On Delivery</p>
+                                    <p className="text-gray-500 text-xs">Pay when you receive your order</p>
                                 </div>
                             </div>
-                            <span className="text-sm text-blue-600 cursor-pointer hover:text-blue-800">Edit</span>
                         </div>
-                        <button className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                            + Add payment method
-                        </button>
                     </div>
                     
                     {/* Shipping Addresses */}
@@ -232,18 +222,12 @@ export default function Dashboard({ recentOrders = [], recentlyViewedProducts = 
                             <TruckIcon className="h-5 w-5 text-gray-600" />
                             <h2 className="text-lg font-semibold text-gray-900">Shipping Addresses</h2>
                         </div>
-                        <div className="border rounded-lg p-4 flex items-center justify-between">
-                            <div>
-                                <p className="font-medium text-gray-900">Home</p>
-                                <p className="text-gray-600 text-sm">123 Main Street</p>
-                                <p className="text-gray-600 text-sm">Narayanganj, Chasara Amlapara</p>
-                                <p className="text-gray-600 text-sm">Bangladesh</p>
+                        <div className="border rounded-lg p-4 flex items-center justify-center bg-gray-50 min-h-[80px]">
+                            <div className="text-center w-full">
+                                <p className="text-gray-900 font-medium">Provide your shipping address during checkout.</p>
+                                <p className="text-gray-500 text-xs mt-1">You will be able to enter or select your address when placing an order.</p>
                             </div>
-                            <span className="text-sm text-blue-600 cursor-pointer hover:text-blue-800">Edit</span>
                         </div>
-                        <button className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                            + Add address
-                        </button>
                     </div>
                 </div>
                 
