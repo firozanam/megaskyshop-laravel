@@ -536,4 +536,186 @@ class ProductController extends Controller
             'productCount' => $productCount
         ]);
     }
+
+    /**
+     * Export products as CSV
+     */
+    public function exportProducts(Request $request)
+    {
+        try {
+            // Fetch all products with their categories
+            $products = Product::with('category')->get();
+            
+            // Create CSV file
+            $filename = 'products_export_' . date('Y-m-d_His') . '.csv';
+            $headers = [
+                'Content-type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename=' . $filename,
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0',
+            ];
+            
+            $handle = fopen('php://temp', 'r+');
+            
+            // Add CSV header row
+            fputcsv($handle, [
+                'ID',
+                'Name',
+                'Price',
+                'Description',
+                'Category',
+                'Category ID',
+                'Stock',
+                'Meta Description',
+                'Meta Title',
+                'Main Image'
+            ]);
+            
+            // Add data rows
+            foreach ($products as $product) {
+                fputcsv($handle, [
+                    $product->id,
+                    $product->name,
+                    $product->price,
+                    $product->description,
+                    $product->category,
+                    $product->category_id,
+                    $product->stock,
+                    $product->meta_description,
+                    $product->meta_title,
+                    $product->main_image
+                ]);
+            }
+            
+            rewind($handle);
+            $csv = stream_get_contents($handle);
+            fclose($handle);
+            
+            \Log::info('Products exported successfully', ['count' => $products->count()]);
+            
+            return response($csv, 200, $headers);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error exporting products', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('admin.products.index')
+                ->with('error', 'An error occurred while exporting products: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Import products from CSV
+     */
+    public function importProducts(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'csv_file' => 'required|file|mimes:csv,txt|max:10240',
+            ]);
+            
+            if ($validator->fails()) {
+                return redirect()->route('admin.products.index')
+                    ->withErrors($validator)
+                    ->with('error', 'Invalid file format. Please upload a CSV file.');
+            }
+            
+            $file = $request->file('csv_file');
+            $filePath = $file->getRealPath();
+            
+            // Parse CSV
+            $csvData = array_map('str_getcsv', file($filePath));
+            $headers = array_shift($csvData); // Remove and get headers
+            
+            // Validate headers
+            $requiredHeaders = ['Name', 'Price', 'Category', 'Stock'];
+            $missingHeaders = array_diff(array_map('strtolower', $requiredHeaders), array_map('strtolower', $headers));
+            
+            if (!empty($missingHeaders)) {
+                return redirect()->route('admin.products.index')
+                    ->with('error', 'CSV file is missing required columns: ' . implode(', ', $missingHeaders));
+            }
+            
+            // Map column names to indexes
+            $columnMap = array_flip(array_map('strtolower', $headers));
+            
+            // Process rows
+            $imported = 0;
+            $updated = 0;
+            $errors = 0;
+            
+            foreach ($csvData as $row) {
+                // Skip empty rows
+                if (empty($row) || count(array_filter($row)) === 0) {
+                    continue;
+                }
+                
+                // Extract data using the column map
+                $productData = [
+                    'name' => $row[$columnMap['name']] ?? null,
+                    'price' => $row[$columnMap['price']] ?? null,
+                    'description' => $row[$columnMap['description']] ?? null,
+                    'category' => $row[$columnMap['category']] ?? null,
+                    'category_id' => $row[$columnMap['category id']] ?? null,
+                    'stock' => $row[$columnMap['stock']] ?? null,
+                    'meta_description' => $row[$columnMap['meta description']] ?? null,
+                    'meta_title' => $row[$columnMap['meta title']] ?? null,
+                    'main_image' => $row[$columnMap['main image']] ?? null,
+                ];
+                
+                // Check for required fields
+                if (empty($productData['name']) || !isset($productData['price']) || !isset($productData['stock'])) {
+                    $errors++;
+                    continue;
+                }
+                
+                // If we have an ID column, try to update the existing product
+                $productId = isset($columnMap['id']) ? $row[$columnMap['id']] : null;
+                
+                if ($productId) {
+                    // Try to find and update an existing product
+                    $product = Product::find($productId);
+                    
+                    if ($product) {
+                        $product->update($productData);
+                        $updated++;
+                        continue;
+                    }
+                }
+                
+                // Create a new product
+                Product::create($productData);
+                $imported++;
+            }
+            
+            \Log::info('Products imported successfully', [
+                'imported' => $imported,
+                'updated' => $updated,
+                'errors' => $errors
+            ]);
+            
+            $message = "Import completed: {$imported} products created";
+            if ($updated > 0) {
+                $message .= ", {$updated} products updated";
+            }
+            if ($errors > 0) {
+                $message .= ", {$errors} rows skipped due to errors";
+            }
+            
+            return redirect()->route('admin.products.index')
+                ->with('success', $message);
+                
+        } catch (\Exception $e) {
+            \Log::error('Error importing products', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('admin.products.index')
+                ->with('error', 'An error occurred while importing products: ' . $e->getMessage());
+        }
+    }
 }

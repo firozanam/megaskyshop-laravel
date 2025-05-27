@@ -12,7 +12,11 @@ import {
   Package, 
   Layers, 
   Tag,
-  X
+  X,
+  Upload,
+  Download,
+  FileUp,
+  AlertCircle
 } from 'lucide-react';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -28,6 +32,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Simplified interface for the ProductIndex component
 interface Product {
@@ -53,6 +68,11 @@ interface ProductIndexProps {
     categories: Category[];
     legacyCategories: string[];
     filters: Record<string, any>;
+    errors?: Record<string, string>;
+    flash?: {
+        success?: string;
+        error?: string;
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -66,12 +86,20 @@ export default function ProductIndex(props: ProductIndexProps) {
     const categories = props.categories || [];
     const legacyCategories = props.legacyCategories || [];
     const filters = props.filters || {};
+    const errors = props.errors || {};
+    const flash = props.flash || {};
     
     // State for search
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [categoryFilter, setCategoryFilter] = useState(filters.category || 'all');
     const [isSearching, setIsSearching] = useState(false);
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+    
+    // State for CSV import
+    const [importDialogOpen, setImportDialogOpen] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     
     // Helper function to get category name
     const getCategoryName = (product: Product) => {
@@ -187,6 +215,59 @@ export default function ProductIndex(props: ProductIndexProps) {
         );
     };
     
+    // Handle file change for CSV import
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setUploadError(null);
+        const file = e.target.files?.[0];
+        
+        if (!file) {
+            setSelectedFile(null);
+            return;
+        }
+        
+        // Validate file type
+        if (!file.name.endsWith('.csv') && file.type !== 'text/csv') {
+            setUploadError('Please select a CSV file');
+            setSelectedFile(null);
+            return;
+        }
+        
+        setSelectedFile(file);
+    };
+    
+    // Handle CSV import form submission
+    const handleImportSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!selectedFile) {
+            setUploadError('Please select a CSV file to import');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('csv_file', selectedFile);
+        
+        router.post(route('admin.products.import'), formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                setImportDialogOpen(false);
+                setSelectedFile(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            },
+            onError: (errors) => {
+                console.error('Import errors:', errors);
+                setUploadError(errors.csv_file || 'An error occurred during import');
+            }
+        });
+    };
+    
+    // Handle CSV export
+    const handleExport = () => {
+        window.location.href = route('admin.products.export');
+    };
+    
     // Stock status badge
     const getStockBadge = (stock: number) => {
         if (stock <= 0) {
@@ -226,6 +307,20 @@ export default function ProductIndex(props: ProductIndexProps) {
         <AdminLayout breadcrumbs={breadcrumbs}>
             <Head title="Admin Products" />
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
+                {/* Flash Messages */}
+                {flash.success && (
+                    <Alert className="bg-green-50 text-green-800 border-green-200">
+                        <AlertDescription>{flash.success}</AlertDescription>
+                    </Alert>
+                )}
+                
+                {flash.error && (
+                    <Alert className="bg-red-50 text-red-800 border-red-200">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{flash.error}</AlertDescription>
+                    </Alert>
+                )}
+                
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex flex-col">
                         <h1 className="text-2xl font-bold">Products</h1>
@@ -233,12 +328,103 @@ export default function ProductIndex(props: ProductIndexProps) {
                             Manage your product inventory, prices and details
                         </p>
                     </div>
-                    <Link href="/admin/products/create">
-                        <Button className="bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Add Product
+                    <div className="flex flex-wrap gap-2">
+                        {/* CSV Import Dialog */}
+                        <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100">
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Import CSV
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle>Import Products from CSV</DialogTitle>
+                                    <DialogDescription>
+                                        Upload a CSV file with product data. The file must include columns for Name, Price, Category, and Stock.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                
+                                <form onSubmit={handleImportSubmit} className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="csv-file">CSV File</Label>
+                                        <Input
+                                            id="csv-file"
+                                            type="file"
+                                            accept=".csv"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                            className="border-blue-200 focus-visible:ring-blue-500"
+                                        />
+                                        {selectedFile && (
+                                            <p className="text-sm text-gray-500">
+                                                Selected file: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                                            </p>
+                                        )}
+                                        {uploadError && (
+                                            <p className="text-sm text-red-500">{uploadError}</p>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="bg-amber-50 p-3 rounded-md border border-amber-100">
+                                        <h4 className="text-sm font-medium text-amber-800 mb-1">CSV Format Requirements</h4>
+                                        <ul className="text-xs text-amber-700 list-disc list-inside space-y-1">
+                                            <li>First row must be column headers</li>
+                                            <li>Required columns: Name, Price, Category, Stock</li>
+                                            <li>Optional columns: ID, Description, Category ID, Meta Description, Meta Title, Main Image</li>
+                                            <li>If ID is provided, existing products will be updated</li>
+                                        </ul>
+                                        <div className="mt-2 pt-2 border-t border-amber-100">
+                                            <a 
+                                                href="/templates/product_import_template.csv"
+                                                download
+                                                className="text-xs flex items-center text-amber-800 hover:text-amber-900 font-medium"
+                                            >
+                                                <Download className="h-3 w-3 mr-1" />
+                                                Download CSV Template
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <DialogFooter className="pt-2">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            onClick={() => setImportDialogOpen(false)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button 
+                                            type="submit"
+                                            disabled={!selectedFile}
+                                            className="bg-blue-600 hover:bg-blue-700"
+                                        >
+                                            <FileUp className="mr-2 h-4 w-4" />
+                                            Import Products
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                        
+                        {/* Export Button */}
+                        <Button 
+                            variant="outline" 
+                            className="border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+                            onClick={handleExport}
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Export CSV
                         </Button>
-                    </Link>
+                        
+                        {/* Add Product Button */}
+                        <Link href="/admin/products/create">
+                            <Button className="bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Add Product
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
                 
                 {/* Search filters indicator */}

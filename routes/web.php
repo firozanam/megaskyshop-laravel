@@ -93,6 +93,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'destroy' => 'admin.products.destroy',
         ]);
     
+    // Bulk import/export products
+    Route::get('admin/products/export', [ProductController::class, 'exportProducts'])->name('admin.products.export');
+    Route::post('admin/products/import', [ProductController::class, 'importProducts'])->name('admin.products.import');
+    
     // Admin category routes
     Route::resource('admin/categories', CategoryController::class)
         ->except(['show'])
