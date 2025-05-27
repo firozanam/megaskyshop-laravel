@@ -1,4 +1,3 @@
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
@@ -7,12 +6,9 @@ import { Link } from '@inertiajs/react';
 import {
     ShoppingBagIcon,
     HeartIcon,
-    UserCircleIcon,
-    CreditCardIcon,
     HomeIcon,
     ShoppingCartIcon,
     ClipboardDocumentListIcon,
-    Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import AppLogo from './app-logo';
 
@@ -44,24 +40,6 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Account Settings',
-        href: '/user/profile',
-        icon: UserCircleIcon,
-    },
-    {
-        title: 'Payment Methods',
-        href: '/user/payment-methods',
-        icon: CreditCardIcon,
-    },
-    {
-        title: 'Preferences',
-        href: '/user/preferences',
-        icon: Cog6ToothIcon,
-    },
-];
-
 export function AppSidebar() {
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -82,7 +60,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

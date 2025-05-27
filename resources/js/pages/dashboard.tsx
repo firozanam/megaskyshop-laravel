@@ -18,7 +18,84 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Dashboard() {
+interface Order {
+    id: number;
+    name: string;
+    email: string;
+    shipping_address: string;
+    mobile: string;
+    total: number;
+    status: string;
+    created_at: string;
+    items: Array<{
+        id: number;
+        product_id: number;
+        name: string;
+        quantity: number;
+        price: number;
+        image: string;
+    }>;
+    tracking?: {
+        id: number;
+        order_id: number;
+        tracking_id: string | null;
+        partner_id: string | null;
+        status: string;
+        details: any | null;
+    };
+}
+
+interface Category {
+    id: number;
+    name: string;
+    slug: string;
+}
+
+interface Product {
+    id: number;
+    name: string;
+    price: number;
+    description: string;
+    category?: string;
+    category_id?: number;
+    stock: number;
+    main_image: string;
+    avg_rating: number;
+    category_obj?: Category;
+}
+
+interface DashboardProps {
+    recentOrders: Order[];
+    recentlyViewedProducts: Product[];
+}
+
+export default function Dashboard({ recentOrders = [], recentlyViewedProducts = [] }: DashboardProps) {
+    // Format date to a readable format
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    };
+
+    // Get status badge color based on status
+    const getStatusBadgeClass = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'delivered':
+                return 'bg-green-100 text-green-800';
+            case 'processing':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'shipped':
+                return 'bg-blue-100 text-blue-800';
+            case 'cancelled':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Customer Dashboard" />
@@ -86,36 +163,31 @@ export default function Dashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="border-b">
-                                    <td className="py-4 text-gray-900">#MS-2023001</td>
-                                    <td className="py-4 text-gray-600">June 12, 2023</td>
-                                    <td className="py-4">
-                                        <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                            Delivered
-                                        </span>
-                                    </td>
-                                    <td className="py-4 text-gray-900">৳2,450</td>
-                                    <td className="py-4">
-                                        <Link href="/user/orders/MS-2023001" className="text-blue-600 hover:text-blue-800 text-sm">
-                                            View
-                                        </Link>
-                                    </td>
-                                </tr>
-                                <tr className="border-b">
-                                    <td className="py-4 text-gray-900">#MS-2023015</td>
-                                    <td className="py-4 text-gray-600">July 3, 2023</td>
-                                    <td className="py-4">
-                                        <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                            Processing
-                                        </span>
-                                    </td>
-                                    <td className="py-4 text-gray-900">৳1,850</td>
-                                    <td className="py-4">
-                                        <Link href="/user/orders/MS-2023015" className="text-blue-600 hover:text-blue-800 text-sm">
-                                            View
-                                        </Link>
-                                    </td>
-                                </tr>
+                                {recentOrders.length > 0 ? (
+                                    recentOrders.map((order) => (
+                                        <tr key={order.id} className="border-b">
+                                            <td className="py-4 text-gray-900">#{order.id}</td>
+                                            <td className="py-4 text-gray-600">{formatDate(order.created_at)}</td>
+                                            <td className="py-4">
+                                                <span className={`${getStatusBadgeClass(order.status)} text-xs font-medium px-2.5 py-0.5 rounded`}>
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 text-gray-900">৳{order.total.toLocaleString()}</td>
+                                            <td className="py-4">
+                                                <Link href={`/user/orders/${order.id}`} className="text-blue-600 hover:text-blue-800 text-sm">
+                                                    View
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="py-4 text-center text-gray-500">
+                                            No orders found. Start shopping to see your orders here.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -188,61 +260,54 @@ export default function Dashboard() {
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                        {/* Product 1 */}
-                        <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="aspect-square bg-gray-100 relative">
-                                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                    Product Image
-                                </div>
-                            </div>
-                            <div className="p-4">
-                                <h3 className="font-medium text-gray-900 mb-1 truncate">Wireless Earbuds</h3>
-                                <p className="text-gray-600 text-sm mb-2">Electronics</p>
-                                <p className="font-semibold text-gray-900">৳1,200</p>
-                            </div>
-                        </div>
-                        
-                        {/* Product 2 */}
-                        <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="aspect-square bg-gray-100 relative">
-                                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                    Product Image
-                                </div>
-                            </div>
-                            <div className="p-4">
-                                <h3 className="font-medium text-gray-900 mb-1 truncate">Smart Watch</h3>
-                                <p className="text-gray-600 text-sm mb-2">Electronics</p>
-                                <p className="font-semibold text-gray-900">৳2,500</p>
-                            </div>
-                        </div>
-                        
-                        {/* Product 3 */}
-                        <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="aspect-square bg-gray-100 relative">
-                                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                    Product Image
-                                </div>
-                            </div>
-                            <div className="p-4">
-                                <h3 className="font-medium text-gray-900 mb-1 truncate">Bluetooth Speaker</h3>
-                                <p className="text-gray-600 text-sm mb-2">Electronics</p>
-                                <p className="font-semibold text-gray-900">৳1,800</p>
-                            </div>
-                        </div>
-                        
-                        {/* Product 4 */}
-                        <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="aspect-square bg-gray-100 relative">
-                                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                    Product Image
-                                </div>
-                            </div>
-                            <div className="p-4">
-                                <h3 className="font-medium text-gray-900 mb-1 truncate">Power Bank</h3>
-                                <p className="text-gray-600 text-sm mb-2">Electronics</p>
-                                <p className="font-semibold text-gray-900">৳950</p>
-                            </div>
-                        </div>
+                        {recentlyViewedProducts.length > 0 ? (
+                            recentlyViewedProducts.map((product) => (
+                                <Link 
+                                    key={product.id} 
+                                    href={`/products/${product.id}`}
+                                    className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                                >
+                                    <div className="aspect-square bg-gray-100 relative">
+                                        {product.main_image ? (
+                                            <img 
+                                                src={`/storage/${product.main_image}`} 
+                                                alt={product.name}
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                                                Product Image
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="p-4">
+                                        <h3 className="font-medium text-gray-900 mb-1 truncate">{product.name}</h3>
+                                        <p className="text-gray-600 text-sm mb-2">
+                                            {product.category_obj?.name || product.category || 'Uncategorized'}
+                                        </p>
+                                        <p className="font-semibold text-gray-900">৳{product.price.toLocaleString()}</p>
+                                    </div>
+                                </Link>
+                            ))
+                        ) : (
+                            <>
+                                {/* Show 4 placeholder products */}
+                                {Array.from({ length: 4 }).map((_, index) => (
+                                    <div key={index} className="border rounded-lg overflow-hidden">
+                                        <div className="aspect-square bg-gray-100 relative">
+                                            <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                                                Product Image
+                                            </div>
+                                        </div>
+                                        <div className="p-4">
+                                            <div className="h-5 bg-gray-200 rounded mb-2"></div>
+                                            <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                                            <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
