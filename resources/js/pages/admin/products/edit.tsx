@@ -168,7 +168,7 @@ export default function ProductEdit({ product, categories, errors = {} }: Produc
         const data = new FormData();
         
         // Handle the special case for setting first new image as main
-        let isFirstNewImageMain = formData.main_image_id === 'new_first';
+        const isFirstNewImageMain = formData.main_image_id === 'new_first';
         
         // Add form fields to FormData
         Object.entries(formData).forEach(([key, value]) => {

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Eye, Search, Info, AlertCircle, CheckCircle, Package, Truck, Clock, Filter, SlidersHorizontal, Calendar, Phone, Mail, UserCircle, ShoppingBag } from 'lucide-react';
+import { Eye, Search, Info, AlertCircle, CheckCircle, Package, Truck, Clock, Filter, SlidersHorizontal, Calendar as CalendarIcon, Phone, Mail, UserCircle, ShoppingBag, Download, Upload, FileSpreadsheet } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import toast, { Toaster } from 'react-hot-toast';
 
 interface OrderItem {
   id: number;
@@ -69,10 +76,139 @@ export default function OrdersIndex({ orders, filters }: OrdersIndexProps) {
   const [status, setStatus] = useState(filters.status || 'all');
   const [search, setSearch] = useState(filters.search || '');
   const [showFilters, setShowFilters] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [skipExisting, setSkipExisting] = useState(true);
+  const [exportStatus, setExportStatus] = useState('all');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { flash } = usePage().props as any;
+  
+  // Check for flash messages on component mount and updates
+  useEffect(() => {
+    if (flash?.success) {
+      toast.success(flash.success, {
+        duration: 5000,
+        style: {
+          minWidth: '250px',
+        },
+      });
+    } else if (flash?.warning) {
+      toast.custom((t) => (
+        <div
+          className={`${
+            t.visible ? 'animate-enter' : 'animate-leave'
+          } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+        >
+          <div className="flex-1 w-0 p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 pt-0.5">
+                <Info className="h-5 w-5 text-yellow-500" />
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  Warning
+                </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  {flash.warning}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex border-l border-gray-200">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: 5000,
+      });
+    } else if (flash?.error || flash?.import) {
+      toast.error(flash.error || flash.import, {
+        duration: 5000,
+        style: {
+          minWidth: '250px',
+        },
+      });
+    }
+  }, [flash]);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     window.location.href = `/admin/orders?status=${status}&search=${search}`;
+  };
+  
+  const handleExport = () => {
+    const params = new URLSearchParams();
+    params.append('status', exportStatus);
+    
+    if (startDate) {
+      params.append('start_date', startDate);
+    }
+    
+    if (endDate) {
+      params.append('end_date', endDate);
+    }
+    
+    window.location.href = `/admin/orders/export?${params.toString()}`;
+    setIsExportDialogOpen(false);
+    toast.success('Export started. Your download should begin shortly.', {
+      duration: 5000,
+      style: {
+        minWidth: '250px',
+      },
+    });
+  };
+  
+  const handleImport = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!fileInputRef.current?.files?.length) {
+      toast.error('Please select a CSV file to import.', {
+        duration: 5000,
+        style: {
+          minWidth: '250px',
+        },
+      });
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('csv_file', fileInputRef.current.files[0]);
+    formData.append('skip_existing', skipExisting ? '1' : '0');
+    
+    toast.loading('Importing orders...', { 
+      id: 'importToast',
+      duration: Infinity,
+      style: {
+        minWidth: '250px',
+      },
+    });
+    
+    router.post('/admin/orders/import', formData, {
+      forceFormData: true,
+      onSuccess: () => {
+        setIsImportDialogOpen(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        toast.dismiss('importToast');
+      },
+      onError: (errors) => {
+        toast.dismiss('importToast');
+        toast.error(errors.import || 'Failed to import orders. Please check your CSV file format.', {
+          duration: 5000,
+          style: {
+            minWidth: '250px',
+          },
+        });
+      }
+    });
   };
   
   const getStatusBadge = (status: string) => {
@@ -143,13 +279,172 @@ export default function OrdersIndex({ orders, filters }: OrdersIndexProps) {
   return (
     <AdminLayout breadcrumbs={breadcrumbs}>
       <Head title="Order Management" />
+      <Toaster 
+        position="top-right" 
+        toastOptions={{
+          duration: 5000,
+          style: {
+            minWidth: '250px',
+            padding: '16px',
+            color: '#363636',
+          },
+          success: {
+            icon: '✅',
+          },
+          error: {
+            icon: '❌',
+          },
+        }}
+      />
       <div className="flex h-full flex-1 flex-col gap-6 p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Order Management</h1>
-          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
-            Filters
-          </Button>
+          <div className="flex gap-2">
+            <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Export Orders</DialogTitle>
+                  <DialogDescription>
+                    Export orders to a CSV file. You can filter by status and date range.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="export-status" className="text-right">
+                      Status
+                    </Label>
+                    <div className="col-span-3">
+                      <Select value={exportStatus} onValueChange={setExportStatus}>
+                        <SelectTrigger id="export-status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Statuses</SelectItem>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Processing">Processing</SelectItem>
+                          <SelectItem value="Shipped">Shipped</SelectItem>
+                          <SelectItem value="Delivered">Delivered</SelectItem>
+                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="start-date" className="text-right">
+                      Start Date
+                    </Label>
+                    <Input
+                      id="start-date"
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="end-date" className="text-right">
+                      End Date
+                    </Label>
+                    <Input
+                      id="end-date"
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="col-span-3"
+                      min={startDate}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsExportDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="button" onClick={handleExport}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Import Orders</DialogTitle>
+                  <DialogDescription>
+                    Import orders from a CSV file. The file should have the same format as the exported file.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleImport}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="csv-file" className="text-right">
+                        CSV File
+                      </Label>
+                      <Input
+                        id="csv-file"
+                        type="file"
+                        accept=".csv"
+                        ref={fileInputRef}
+                        className="col-span-3"
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="skip-existing" className="text-right">
+                        Options
+                      </Label>
+                      <div className="col-span-3 flex items-center space-x-2">
+                        <Checkbox
+                          id="skip-existing"
+                          checked={skipExisting}
+                          onCheckedChange={(checked) => setSkipExisting(!!checked)}
+                        />
+                        <label
+                          htmlFor="skip-existing"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Skip existing orders
+                        </label>
+                      </div>
+                    </div>
+                    <div className="col-span-4">
+                      <p className="text-sm text-muted-foreground">
+                        <FileSpreadsheet className="inline-block mr-1 h-4 w-4" />
+                        Download a <a href="/admin/orders/export" className="text-blue-600 hover:underline">sample CSV file</a> to see the required format.
+                      </p>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Import
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+            
+            <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
+              <SlidersHorizontal className="mr-2 h-4 w-4" />
+              Filters
+            </Button>
+          </div>
         </div>
         
         <Card className="shadow-sm">
@@ -244,7 +539,7 @@ export default function OrdersIndex({ orders, filters }: OrdersIndexProps) {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm text-gray-500">
-                            <Calendar className="h-3 w-3" />
+                            <CalendarIcon className="h-3 w-3" />
                             {formatDate(order.created_at)}
                           </div>
                         </TableCell>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from '@inertiajs/react';
 import { Button } from "@/components/ui/button";
 
@@ -6,16 +6,54 @@ interface PricingSectionProps {
     title: string;
     content: string;
     features: string[] | any;
+    imagePath?: string;
 }
 
-export default function PricingSection({ title, content, features = [] }: PricingSectionProps) {
+export default function PricingSection({ title, content, features = [], imagePath }: PricingSectionProps) {
     // Try to extract old and new prices from content if it's in HTML format
     let oldPrice = "৯৯৯/=";
     let newPrice = "৭৯০-/=";
-    let discount = "-20.92%";
+    const discount = "-20.92%";
     
     // Process features to ensure it's an array
     const [processedFeatures, setProcessedFeatures] = useState<string[]>([]);
+    
+    // Ref for the section element to track scroll position
+    const sectionRef = useRef<HTMLElement>(null);
+    
+    // State for background position
+    const [backgroundPosition, setBackgroundPosition] = useState('center');
+    
+    // Add scroll event listener to create parallax effect
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!sectionRef.current) return;
+            
+            const rect = sectionRef.current.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+            
+            // Check if section is in viewport
+            if (rect.top < windowHeight && rect.bottom > 0) {
+                // Calculate how far the section is scrolled into view as a percentage
+                const scrollPercentage = (windowHeight - rect.top) / (windowHeight + rect.height);
+                
+                // Use the percentage to adjust background position
+                // This creates a subtle parallax effect
+                const yPosition = 50 + (scrollPercentage * 20 - 10); // Move from 40% to 60% based on scroll
+                setBackgroundPosition(`center ${yPosition}%`);
+            }
+        };
+        
+        // Add scroll event listener
+        window.addEventListener('scroll', handleScroll);
+        // Initial call to set position
+        handleScroll();
+        
+        // Clean up
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
     
     useEffect(() => {
         // Debug the features prop
@@ -89,6 +127,9 @@ export default function PricingSection({ title, content, features = [] }: Pricin
                   from { text-shadow: 0 0 10px rgba(253, 224, 71, 0.5); }
                   to { text-shadow: 0 0 20px rgba(253, 224, 71, 0.8); }
                 }
+                .bg-scroll-effect {
+                  transition: background-position 0.3s ease-out;
+                }
             `;
         }
         
@@ -106,19 +147,25 @@ export default function PricingSection({ title, content, features = [] }: Pricin
         processedFeatures.push('সারা বাংলাদেশের যে কোন জায়গায় ফ্রি ডেলিভারি চার্জ ফ্রি!');
     }
     
+    // Determine the background image URL
+    const backgroundImageUrl = imagePath 
+        ? (imagePath.startsWith('/storage/') ? imagePath : `/storage/${imagePath}`)
+        : '/images/texture-bg.jpg';
+    
     return (
-        <section className="my-8 sm:my-12 md:my-16">
+        <section ref={sectionRef} className="my-8 sm:my-12 md:my-16">
             <div 
                 className="w-full bg-[hsl(var(--primary)/.98)] relative py-8 sm:py-12 md:py-16 -mx-[calc((100vw-100%)/2)] px-[calc((100vw-100%)/2)] overflow-hidden"
             >
                 {/* Background with overlay and pattern */}
                 <div 
-                    className="absolute inset-0 z-0"
+                    className="absolute inset-0 z-0 bg-scroll-effect"
                     style={{
-                        backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(/images/texture-bg.jpg)',
+                        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${backgroundImageUrl})`,
                         backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat'
+                        backgroundPosition,
+                        backgroundRepeat: 'no-repeat',
+                        transition: 'background-position 0.5s ease-out'
                     }}
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(45deg,hsl(var(--primary)/.1)_25%,transparent_25%,transparent_50%,hsl(var(--primary)/.1)_50%,hsl(var(--primary)/.1)_75%,transparent_75%,transparent)] bg-[length:32px_32px] sm:bg-[length:48px_48px] md:bg-[length:64px_64px] opacity-30" />

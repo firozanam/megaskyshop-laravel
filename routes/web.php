@@ -123,6 +123,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         
     // Admin order management routes
     Route::get('admin/orders', [OrderController::class, 'adminIndex'])->name('admin.orders.index');
+    Route::get('admin/orders/export', [OrderController::class, 'exportOrders'])->name('admin.orders.export');
+    Route::post('admin/orders/import', [OrderController::class, 'importOrders'])->name('admin.orders.import');
     Route::get('admin/orders/{order}', [OrderController::class, 'adminShow'])->name('admin.orders.show');
     Route::put('admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status.update');
     Route::put('admin/orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('admin.orders.tracking.update');
@@ -147,6 +149,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/filemanager', [App\Http\Controllers\Admin\FileManagerController::class, 'index'])->name('admin.filemanager');
     Route::post('/admin/filemanager/upload', [App\Http\Controllers\Admin\FileManagerController::class, 'upload'])->name('admin.filemanager.upload');
     Route::delete('/admin/filemanager/destroy', [App\Http\Controllers\Admin\FileManagerController::class, 'destroy'])->name('admin.filemanager.destroy');
+    Route::post('/admin/filemanager/check-directory', [App\Http\Controllers\Admin\FileManagerController::class, 'checkDirectory'])->name('admin.filemanager.check-directory');
+    Route::post('/admin/filemanager/clear-cache', [App\Http\Controllers\Admin\FileManagerController::class, 'clearCache'])->name('admin.filemanager.clear-cache');
 });
 
 // Public product routes
@@ -185,12 +189,17 @@ Route::middleware(['auth'])->group(function () {
 // Debug route for storage
 Route::get('/debug/storage', function() {
     $path = 'uploads/placeholder.jpg';
+    $placeholderUrl = placeholder_image_url();
+    
     if (Storage::disk('public')->exists($path)) {
         return "File exists at: " . Storage::disk('public')->path($path) . 
                "<br>URL: " . Storage::disk('public')->url($path) .
+               "<br>Helper URL: " . $placeholderUrl .
                "<br><img src='" . Storage::disk('public')->url($path) . "' style='max-width:300px'>";
     } else {
-        return "File not found: " . $path;
+        return "File not found: " . $path . 
+               "<br>Using fallback: " . $placeholderUrl .
+               "<br><img src='" . $placeholderUrl . "' style='max-width:300px'>";
     }
 });
 
@@ -389,6 +398,25 @@ Route::get('/debug/reports-component', function() {
         'timeRange' => (string) $days,
     ]);
 })->middleware(['web']);
+
+// Debug route for file URLs
+Route::get('/debug/file-urls', function() {
+    $file = 'uploads/placeholder.jpg';
+    $storage_url = Storage::disk('public')->url($file);
+    $url_helper = url($storage_url);
+    $asset_helper = asset('storage/' . $file);
+    $placeholder_helper = placeholder_image_url();
+    
+    return response()->json([
+        'storage_url' => $storage_url,
+        'url_helper' => $url_helper,
+        'asset_helper' => $asset_helper,
+        'placeholder_helper' => $placeholder_helper,
+        'app_url' => config('app.url'),
+        'request_url' => request()->url(),
+        'request_root' => request()->root(),
+    ]);
+});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

@@ -106,24 +106,45 @@ export default function FileManager({ files = [] }: FileManagerProps) {
         if (acceptedFiles.length === 0) return;
         
         setIsUploading(true);
+        console.log('Starting file upload...', acceptedFiles[0].name);
         
         const formData = new FormData();
         formData.append('file', acceptedFiles[0]);
         
         try {
+            // Get CSRF token from meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            if (!csrfToken) {
+                throw new Error('CSRF token not found');
+            }
+            
+            console.log('Sending upload request with CSRF token:', csrfToken.substring(0, 10) + '...');
+            
             const response = await fetch('/admin/filemanager/upload', {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
+                    // Don't set Content-Type header when sending FormData
+                    // The browser will set it with the correct boundary
                 },
+                credentials: 'same-origin', // Include cookies
             });
             
+            console.log('Upload response status:', response.status);
+            
             if (!response.ok) {
-                throw new Error('Failed to upload file');
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Upload error response:', errorData);
+                throw new Error(errorData.message || 'Failed to upload file');
             }
             
+            const responseData = await response.json();
+            console.log('Upload successful, response data:', responseData);
+            
             // Reload the page to show the new file
+            console.log('Reloading page to show new file...');
             router.reload();
             
             setAlertState({
@@ -166,24 +187,44 @@ export default function FileManager({ files = [] }: FileManagerProps) {
         if (!files || files.length === 0) return;
         
         setIsUploading(true);
+        console.log('Starting file upload from input...', files[0].name);
         
         const formData = new FormData();
         formData.append('file', files[0]);
         
         try {
+            // Get CSRF token from meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            if (!csrfToken) {
+                throw new Error('CSRF token not found');
+            }
+            
+            console.log('Sending upload request with CSRF token:', csrfToken.substring(0, 10) + '...');
+            
             const response = await fetch('/admin/filemanager/upload', {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
+                    // Don't set Content-Type header when sending FormData
                 },
+                credentials: 'same-origin', // Include cookies
             });
             
+            console.log('Upload response status:', response.status);
+            
             if (!response.ok) {
-                throw new Error('Failed to upload file');
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Upload error response:', errorData);
+                throw new Error(errorData.message || 'Failed to upload file');
             }
             
+            const responseData = await response.json();
+            console.log('Upload successful, response data:', responseData);
+            
             // Reload the page to show the new file
+            console.log('Reloading page to show new file...');
             router.reload();
             
             setAlertState({
@@ -200,6 +241,11 @@ export default function FileManager({ files = [] }: FileManagerProps) {
             });
         } finally {
             setIsUploading(false);
+            
+            // Clear the file input so the same file can be selected again
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         }
     };
     
@@ -208,34 +254,38 @@ export default function FileManager({ files = [] }: FileManagerProps) {
         router.reload();
     };
     
-    // Handle file deletion
-    const handleDeleteFile = async () => {
-        if (!selectedFile) return;
-        
+    // Handle cache clearing
+    const handleClearCache = async () => {
         try {
-            const response = await fetch('/admin/filemanager/destroy', {
-                method: 'DELETE',
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            if (!csrfToken) {
+                throw new Error('CSRF token not found');
+            }
+            
+            const response = await fetch('/admin/filemanager/clear-cache', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
-                body: JSON.stringify({ path: selectedFile.path }),
+                credentials: 'same-origin',
             });
             
             if (!response.ok) {
-                throw new Error('Failed to delete file');
+                throw new Error('Failed to clear cache');
             }
             
-            // Reload the page to update the file list
+            // Reload the page to show the updated files
             router.reload();
             
             setAlertState({
                 show: true,
                 type: 'success',
-                message: 'File deleted successfully!',
+                message: 'Cache cleared successfully!',
             });
         } catch (error) {
-            console.error('Delete error:', error);
+            console.error('Cache clear error:', error);
             setAlertState({
                 show: true,
                 type: 'error',
@@ -262,12 +312,38 @@ export default function FileManager({ files = [] }: FileManagerProps) {
             return FALLBACK_IMAGE_URL;
         }
         
-        // If URL doesn't start with http or /, add the storage prefix
-        if (!file.url.startsWith('http') && !file.url.startsWith('/')) {
-            return `/storage/${file.url}`;
+        try {
+            // If URL is absolute but uses localhost, replace with current hostname
+            if (file.url.startsWith('http://localhost') || file.url.startsWith('https://localhost')) {
+                const currentUrl = new URL(window.location.href);
+                const fileUrl = new URL(file.url);
+                fileUrl.host = currentUrl.host;
+                fileUrl.protocol = currentUrl.protocol;
+                fileUrl.port = currentUrl.port;
+                return fileUrl.toString();
+            }
+            
+            // If URL doesn't start with http or /, add the storage prefix with current domain
+            if (!file.url.startsWith('http') && !file.url.startsWith('/')) {
+                const baseUrl = window.location.origin;
+                return `${baseUrl}/storage/${file.url}`;
+            }
+            
+            // If URL starts with / but not //, prepend current origin
+            if (file.url.startsWith('/') && !file.url.startsWith('//')) {
+                const baseUrl = window.location.origin;
+                return `${baseUrl}${file.url}`;
+            }
+            
+            return file.url;
+        } catch (error) {
+            console.error('Error parsing URL:', error);
+            setImageErrors(prev => ({
+                ...prev,
+                [file.id]: true
+            }));
+            return FALLBACK_IMAGE_URL;
         }
-        
-        return file.url;
     };
     
     // Handle image load
@@ -288,17 +364,53 @@ export default function FileManager({ files = [] }: FileManagerProps) {
     
     // Handle image error
     const handleImageError = (file: FileItem) => {
-        setImageErrors(prev => ({
-            ...prev,
-            [file.id]: true
-        }));
-        setImageLoading(prev => ({
-            ...prev,
-            [file.id]: false
-        }));
+        console.error(`Image failed to load: ${file.url} (${file.name})`);
         
-        // Log error for debugging
-        console.warn(`Image failed to load: ${file.url} (${file.name})`);
+        // Try alternative URL formats before giving up
+        const originalUrl = file.url;
+        let alternativeUrl = '';
+        
+        if (originalUrl.includes('localhost')) {
+            // Try with 127.0.0.1 instead of localhost
+            alternativeUrl = originalUrl.replace('localhost', '127.0.0.1');
+            console.log(`Retrying with alternative URL: ${alternativeUrl}`);
+            
+            // Create a new image to test the alternative URL
+            const img = new Image();
+            img.onload = () => {
+                console.log(`Alternative URL worked: ${alternativeUrl}`);
+                // Update the URL in our files array
+                const updatedFiles = [...files];
+                const fileIndex = updatedFiles.findIndex(f => f.id === file.id);
+                if (fileIndex !== -1) {
+                    updatedFiles[fileIndex] = { ...updatedFiles[fileIndex], url: alternativeUrl };
+                    // We can't directly update the files prop, but we can force a re-render
+                    setImageLoading(prev => ({ ...prev }));
+                }
+            };
+            img.onerror = () => {
+                console.error(`Alternative URL also failed: ${alternativeUrl}`);
+                setImageErrors(prev => ({
+                    ...prev,
+                    [file.id]: true
+                }));
+                setImageLoading(prev => ({
+                    ...prev,
+                    [file.id]: false
+                }));
+            };
+            img.src = alternativeUrl;
+        } else {
+            // No alternatives worked, mark as error
+            setImageErrors(prev => ({
+                ...prev,
+                [file.id]: true
+            }));
+            setImageLoading(prev => ({
+                ...prev,
+                [file.id]: false
+            }));
+        }
     };
     
     // Track image loading state
@@ -346,6 +458,94 @@ export default function FileManager({ files = [] }: FileManagerProps) {
         return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
     };
     
+    // Check if the uploads directory exists
+    useEffect(() => {
+        const checkUploadsDirectory = async () => {
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                
+                if (!csrfToken) {
+                    console.error('CSRF token not found');
+                    return;
+                }
+                
+                const response = await fetch('/admin/filemanager/check-directory', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    credentials: 'same-origin',
+                }).catch(error => {
+                    console.error('Failed to check uploads directory:', error);
+                    return null;
+                });
+                
+                if (!response || !response.ok) {
+                    console.warn('Failed to check uploads directory. File uploads may not work correctly.');
+                }
+            } catch (error) {
+                console.error('Error checking uploads directory:', error);
+            }
+        };
+        
+        checkUploadsDirectory();
+    }, []);
+    
+    // Log file URLs for debugging
+    useEffect(() => {
+        if (files.length > 0) {
+            console.log('File URLs sample:', {
+                originalUrl: files[0].url,
+                processedUrl: getImageUrl(files[0]),
+                currentOrigin: window.location.origin,
+                files: files.slice(0, 2).map(file => ({
+                    name: file.name,
+                    originalUrl: file.url,
+                    processedUrl: getImageUrl(file)
+                }))
+            });
+        }
+    }, [files]);
+    
+    // Handle file deletion
+    const handleDeleteFile = async () => {
+        if (!selectedFile) return;
+        
+        try {
+            const response = await fetch('/admin/filemanager/destroy', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ path: selectedFile.path }),
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to delete file');
+            }
+            
+            // Reload the page to update the file list
+            router.reload();
+            
+            setAlertState({
+                show: true,
+                type: 'success',
+                message: 'File deleted successfully!',
+            });
+        } catch (error) {
+            console.error('Delete error:', error);
+            setAlertState({
+                show: true,
+                type: 'error',
+                message: 'Failed to delete file. Please try again.',
+            });
+        } finally {
+            setConfirmDeleteOpen(false);
+        }
+    };
+    
     return (
         <AdminLayout breadcrumbs={breadcrumbs}>
             <Head title="File Manager" />
@@ -367,6 +567,35 @@ export default function FileManager({ files = [] }: FileManagerProps) {
                         >
                             <RefreshCw className="mr-2 h-4 w-4" />
                             Refresh
+                        </Button>
+                        
+                        <Button 
+                            variant="outline" 
+                            onClick={handleClearCache}
+                            disabled={isUploading}
+                        >
+                            <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                className="mr-2 h-4 w-4" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                            >
+                                <rect x="2" y="4" width="20" height="16" rx="2" />
+                                <path d="M7 8h.01" />
+                                <path d="M12 8h.01" />
+                                <path d="M17 8h.01" />
+                                <path d="M7 12h.01" />
+                                <path d="M12 12h.01" />
+                                <path d="M17 12h.01" />
+                                <path d="M7 16h.01" />
+                                <path d="M12 16h.01" />
+                                <path d="M17 16h.01" />
+                            </svg>
+                            Clear Cache
                         </Button>
                         
                         <Button 

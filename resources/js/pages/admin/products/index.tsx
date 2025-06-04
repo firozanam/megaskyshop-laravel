@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatBytes, getPlaceholderImage } from '@/lib/utils';
 
 // Simplified interface for the ProductIndex component
 interface Product {
@@ -118,7 +119,7 @@ export default function ProductIndex(props: ProductIndexProps) {
     // Helper function to get image path
     const getImagePath = (imagePath: string | null) => {
         if (!imagePath) {
-            return '/images/placeholder.jpg';
+            return getPlaceholderImage();
         }
         
         if (imagePath.startsWith('http')) {
@@ -571,7 +572,7 @@ export default function ProductIndex(props: ProductIndexProps) {
                                                             alt={product.name}
                                                             className="h-full w-full object-cover"
                                                             onError={(e) => {
-                                                                e.currentTarget.src = '/images/placeholder.jpg';
+                                                                e.currentTarget.src = getPlaceholderImage();
                                                             }}
                                                         />
                                                     </div>

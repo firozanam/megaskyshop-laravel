@@ -163,6 +163,11 @@ const mainNavItems: NavItem[] = [
         icon: LayoutDashboard,
     },
     {
+        title: 'Reports',
+        href: '/admin/reports',
+        icon: BarChart3,
+    },
+    {
         title: 'Products',
         href: '/admin/products',
         icon: Package,
@@ -186,11 +191,6 @@ const mainNavItems: NavItem[] = [
         title: 'Users',
         href: '/admin/users',
         icon: Users,
-    },
-    {
-        title: 'Reports',
-        href: '/admin/reports',
-        icon: BarChart3,
     },
     {
         title: 'File Manager',

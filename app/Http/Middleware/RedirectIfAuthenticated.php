@@ -21,6 +21,11 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                // Check if the user is an admin and redirect accordingly
+                if (Auth::guard($guard)->user()->isAdmin()) {
+                    return redirect('/admin');
+                }
+                
                 return redirect('/dashboard');
             }
         }

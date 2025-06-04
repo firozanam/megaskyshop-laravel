@@ -30,11 +30,18 @@ class FileManagerController extends Controller
         $files = Storage::disk('public')->files('uploads');
         
         return collect($files)->map(function ($file) {
+            $url = Storage::disk('public')->url($file);
+            
+            // Ensure URL is properly formatted with current domain
+            if (!parse_url($url, PHP_URL_HOST)) {
+                $url = url($url);
+            }
+            
             return [
                 'id' => Str::random(16),
                 'name' => basename($file),
                 'path' => $file,
-                'url' => Storage::disk('public')->url($file),
+                'url' => $url,
                 'size' => Storage::disk('public')->size($file),
                 'last_modified' => Storage::disk('public')->lastModified($file),
                 'extension' => pathinfo($file, PATHINFO_EXTENSION),
@@ -47,28 +54,53 @@ class FileManagerController extends Controller
      */
     public function upload(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|max:10240', // Max 10MB
-        ]);
-        
-        $file = $request->file('file');
-        $filename = time() . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-        
-        $path = $file->storeAs('uploads', $filename, 'public');
-        
-        if (!$path) {
-            return response()->json(['error' => 'Failed to upload file'], 500);
+        try {
+            $request->validate([
+                'file' => 'required|file|max:10240', // Max 10MB
+            ]);
+            
+            // Check if the uploads directory exists and create it if it doesn't
+            $uploadsDirectory = 'uploads';
+            if (!Storage::disk('public')->exists($uploadsDirectory)) {
+                if (!Storage::disk('public')->makeDirectory($uploadsDirectory)) {
+                    return response()->json(['error' => 'Failed to create uploads directory'], 500);
+                }
+            }
+            
+            $file = $request->file('file');
+            
+            if (!$file || !$file->isValid()) {
+                return response()->json(['error' => 'Invalid file upload'], 422);
+            }
+            
+            $filename = time() . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            
+            $path = $file->storeAs('uploads', $filename, 'public');
+            
+            if (!$path) {
+                return response()->json(['error' => 'Failed to upload file'], 500);
+            }
+            
+            $url = Storage::disk('public')->url($path);
+            
+            // Ensure URL is properly formatted with current domain
+            if (!parse_url($url, PHP_URL_HOST)) {
+                $url = url($url);
+            }
+            
+            return response()->json([
+                'id' => Str::random(16),
+                'name' => $filename,
+                'path' => $path,
+                'url' => $url,
+                'size' => Storage::disk('public')->size($path),
+                'last_modified' => Storage::disk('public')->lastModified($path),
+                'extension' => $file->getClientOriginalExtension(),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('File upload error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to upload file: ' . $e->getMessage()], 500);
         }
-        
-        return response()->json([
-            'id' => Str::random(16),
-            'name' => $filename,
-            'path' => $path,
-            'url' => Storage::disk('public')->url($path),
-            'size' => Storage::disk('public')->size($path),
-            'last_modified' => Storage::disk('public')->lastModified($path),
-            'extension' => $file->getClientOriginalExtension(),
-        ]);
     }
     
     /**
@@ -88,5 +120,66 @@ class FileManagerController extends Controller
         }
         
         return response()->json(['error' => 'File not found'], 404);
+    }
+    
+    /**
+     * Check if the uploads directory exists and create it if it doesn't.
+     */
+    public function checkDirectory()
+    {
+        $uploadsDirectory = 'uploads';
+        
+        // Check if the uploads directory exists
+        if (!Storage::disk('public')->exists($uploadsDirectory)) {
+            // Create the uploads directory
+            if (Storage::disk('public')->makeDirectory($uploadsDirectory)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Uploads directory created successfully.',
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create uploads directory.',
+                ], 500);
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Uploads directory exists.',
+        ]);
+    }
+    
+    /**
+     * Clear the file manager cache.
+     */
+    public function clearCache()
+    {
+        try {
+            // Clear Laravel's file cache
+            \Illuminate\Support\Facades\Artisan::call('cache:clear');
+            
+            // Clear the storage cache
+            \Illuminate\Support\Facades\Artisan::call('view:clear');
+            
+            // Force a symlink recreation
+            if (file_exists(public_path('storage'))) {
+                unlink(public_path('storage'));
+            }
+            
+            \Illuminate\Support\Facades\Artisan::call('storage:link');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Cache cleared successfully.',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Cache clear error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clear cache: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 } 

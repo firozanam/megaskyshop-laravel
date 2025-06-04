@@ -130,6 +130,11 @@ export default function Welcome() {
                         buttonText={sections.hero.button_text}
                         buttonUrl={sections.hero.button_url}
                         imagePath={sections.hero.image_path}
+                        overlayOpacity={
+                            sections.hero.additional_data && typeof sections.hero.additional_data === 'string'
+                                ? JSON.parse(sections.hero.additional_data)?.overlay_opacity || 70
+                                : sections.hero.additional_data?.overlay_opacity || 70
+                        }
                     />
                 )}
                 
@@ -164,6 +169,7 @@ export default function Welcome() {
                         title={sections.pricing.title}
                         content={sections.pricing.content}
                         features={pricingFeatures}
+                        imagePath={sections.pricing.image_path}
                     />
                 )}
                 

@@ -180,7 +180,7 @@ export default function OrderFormSection({ title, products, defaultProductId = n
                                     {errors.mobile && <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>}
                                 </div>
                                 
-                                <h3 className="text-lg font-semibold mb-4">ইমেইল (ঐচ্ছিক)</h3>
+                                <h3 className="text-lg font-semibold mb-4">ইমেইল (Optional)</h3>
                                 <div className="mb-4">
                                     <input
                                         type="email"

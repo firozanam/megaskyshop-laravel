@@ -129,3 +129,17 @@ export function formatBytes(bytes: number, decimals = 2): string {
     
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
+
+/**
+ * Get the placeholder image URL
+ */
+export function getPlaceholderImage(): string {
+  // Check if we're in a browser environment
+  if (typeof window !== 'undefined') {
+    // Use the current origin to build the URL
+    return `${window.location.origin}/images/placeholder.jpg`;
+  }
+  
+  // Fallback for non-browser environments
+  return '/images/placeholder.jpg';
+}
