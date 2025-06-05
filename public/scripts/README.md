@@ -1,145 +1,161 @@
-# Laravel cPanel Shared Hosting Scripts
+# Laravel Maintenance Scripts for cPanel Shared Hosting
 
-This directory contains utility scripts designed to help with common issues encountered when deploying Laravel applications on cPanel shared hosting environments where terminal access is limited.
+## 1. `laravel_prod_error-fixer.php` - Production Error Fixer
 
-## Available Scripts
+**What it does:**
+🛠️ Fixes common Laravel production errors:
+- File permission issues  
+- Missing storage directories  
+- Cache clearance (config, route, view)  
+- Environment verification  
 
-### 1. `fix_permissions.php`
+**How to run on cPanel:**
+1. Upload to: `public_html/public/scripts/laravel_prod_error-fixer.php`
+2. Run via browser:  
+   `https://yourdomain.com/scripts/laravel_prod_error-fixer.php`
+3. Review the automated fixes applied
+4. Delete immediately after use
 
-This script fixes file and directory permissions for Laravel applications running on cPanel shared hosting.
+## 2. [laravel_symlink_creator.php](cci:7://file:///Volumes/Storage/SaaS%20Business%20Projects/megaskyshop-laravel/public/scripts/laravel_symlink_creator.php:0:0-0:0) - Storage Symlink Creator
 
-**Features:**
-- Sets appropriate permissions for directories (755) and files (644)
-- Sets special permissions for storage directories (775) and files (664)
-- Creates necessary directories if they don't exist
-- Skips vendor, node_modules, and .git directories
-- Creates security .htaccess files
+**What it does:**
+🔗 Creates `public/storage` → `storage/app/public` symlink  
+🔄 Falls back to directory copy if symlinks disabled  
+📁 Creates placeholder images if missing  
+✅ Verifies symlink functionality  
+📱 Mobile-friendly interface  
 
-**Usage:**
-1. Upload this script to your public/scripts directory
-2. Access it via browser: `https://yourdomain.com/scripts/fix_permissions.php`
-3. Delete the script after use for security
+**How to run on cPanel:**
+1. Upload to: `public_html/public/scripts/laravel_symlink_creator.php`
+2. Run via browser:  
+   `https://yourdomain.com/scripts/laravel_symlink_creator.php`
+3. Check output for success/failure
+4. Delete immediately after use
 
-### 2. `fix_storage_links.php`
+## 3. `laravel_permissions_fixer.php` - File Permission Fixer
 
-This script creates the necessary storage links and placeholder images for Laravel applications.
+**What it does:**
 
-**Features:**
-- Creates symbolic link from storage/app/public to public/storage
-- Falls back to directory copy if symlinks are not supported
-- Creates placeholder images in all necessary locations
-- Adds helper functions for PHP and JavaScript
-- Updates AppServiceProvider to check for placeholder images
+✅ Sets correct permissions (755 for directories, 644 for files)  
+✅ Special permissions for storage (775) and bootstrap/cache (775)  
+✅ Creates missing directories automatically  
+✅ Skips vendor/node_modules/.git directories  
+✅ Adds security .htaccess files to sensitive directories  
 
-**Usage:**
-1. Upload this script to your public/scripts directory
-2. Access it via browser: `https://yourdomain.com/scripts/fix_storage_links.php`
-3. Follow the next steps displayed at the end of the script
-4. Delete the script after use for security
+**How to run on cPanel:**
+1. Upload to: `public_html/public/scripts/laravel_permissions_fixer.php`
+2. Run via browser:  
+   `https://yourdomain.com/scripts/laravel_permissions_fixer.php`
+3. Delete immediately after use
 
-### 3. `run_artisan.php`
+## 4. `laravel_run_artisan.php` - Artisan Command Runner
 
-This script allows you to run Laravel artisan commands on shared hosting where terminal access is limited.
+**What it does:**
+⚙️ Safely executes Artisan commands via web:
+- `migrate`  
+- `cache:clear`  
+- `storage:link`  
+- Custom command support  
+🔒 Password protection option  
 
-**Features:**
-- Web interface for running common artisan commands
-- Security restrictions to only allow safe commands
-- Detailed command output display
-- Error handling and status reporting
+**How to run on cPanel:**
+1. Upload to: `public_html/public/scripts/laravel_run_artisan.php`
+2. Edit script to set password (line 15)
+3. Run via browser:  
+   `https://yourdomain.com/scripts/laravel_run_artisan.php`
+4. Delete immediately after use
 
-**Usage:**
-1. Upload this script to your public/scripts directory
-2. Access it via browser: `https://yourdomain.com/scripts/run_artisan.php`
-3. Select a command from the dropdown or use the quick-access cards
-4. Delete the script immediately after use for security (very important!)
+## Security Best Practices
+1. Always delete scripts after use
+2. Never leave scripts in public directories
+3. Use .htaccess to block script directory if possible:
+   ```apache
+   <Files *.php>
+      Deny from all
+   </Files>
 
-**⚠️ SECURITY WARNING:** This script is potentially dangerous as it allows executing commands on your server. Use it only temporarily and delete immediately after use.
+## 5. companion .htaccess security template:
 
-### 4. `fix_symlink_issue.php`
+```apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Standard Laravel redirect to public/
+    RewriteRule ^(.*)$ public/$1 [L]
+    
+    # Security Headers
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Block access to sensitive files
+    <FilesMatch "(\.env|\.env.example|\.gitignore|composer\.json|composer\.lock|package\.json|webpack\.mix\.js)$">
+        Require all denied
+    </FilesMatch>
+    
+    # Block access to hidden files/folders
+    RewriteCond %{SCRIPT_FILENAME} -d [OR]
+    RewriteCond %{SCRIPT_FILENAME} -f
+    RewriteRule "(^|/)\.(?!well-known)" - [F]
+</IfModule>
 
-This script fixes issues with symbolic links in the uploads directory that can cause problems with Flysystem's file listing functionality.
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the "ea-php82" package as the default "PHP" programming language.
+<IfModule mime_module>
+    AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit
 
-**Features:**
-- Replaces symbolic links with actual files in the uploads directory
-- Updates the FileManagerController to better handle symlinks
-- Fixes the "Unable to list contents" error with Flysystem
-- Ensures compatibility with Laravel's file management system
+# Additional security measures
+<IfModule mod_headers.c>
+    # Disable server signature
+    ServerSignature Off
+    
+    # Prevent MIME sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Enable CSP (Content Security Policy) - adjust as needed
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' https:;"
+</IfModule>
 
-**Usage:**
-1. Upload this script to your public/scripts directory
-2. Access it via browser: `https://yourdomain.com/scripts/fix_symlink_issue.php`
-3. Restart your Laravel development server after running the script
-4. Delete the script after use for security
+# Protect the scripts directory
+<Directory "/public/scripts">
+    <FilesMatch "\.(php|php5|phtml)$">
+        Require all denied
+    </FilesMatch>
+</Directory>
 
-## Deployment Process
+# Disable directory browsing
+Options -Indexes
 
-For a smooth deployment to cPanel shared hosting, follow these steps:
+# Compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript
+</IfModule>
+```
 
-1. Upload your Laravel application to the server
-2. Run the `fix_permissions.php` script first
-3. Run the `fix_storage_links.php` script
-4. If you encounter any symlink-related errors, run the `fix_symlink_issue.php` script
-5. Use the `run_artisan.php` script to run necessary artisan commands:
-   - `cache:clear` - Clear application cache
-   - `config:cache` - Create a cache file for faster configuration loading
-   - `route:cache` - Create a route cache file for faster route registration
-   - `view:cache` - Compile all Blade templates
-   - `key:generate` - Generate application key (if needed)
-   - `storage:link` - Create symbolic links (if the fix_storage_links.php script didn't work)
-6. Delete all scripts after use for security
+## Key Security Features Added
 
-## Security Notes
+### Enhanced Headers
+- **XSS Protection**: Blocks cross-site scripting attacks  
+- **MIME Sniffing Prevention**: Stops browsers from interpreting files as different MIME types  
 
-- These scripts are designed for one-time use during deployment or troubleshooting
-- Delete these scripts after use to prevent security vulnerabilities
-- The scripts create appropriate .htaccess files to protect sensitive directories
-- The `run_artisan.php` script is particularly sensitive and should be deleted immediately after use
+### File Protection
+- **Sensitive Files**: Blocks access to `.env`, config files, and development files  
+- **Hidden Files**: Prevents access to all dotfiles (except `.well-known`)  
+- **Script Directory**: Specifically blocks PHP execution in `/public/scripts`  
 
-## Troubleshooting
+### Server Hardening
+- **Directory Browsing**: Disables automatic directory index views  
+- **Content Security Policy**: Basic CSP template (adjust as needed for your app)  
+- **Compression**: Improves performance for text-based assets  
 
-If you encounter issues:
+### Additional Recommendation
+For maximum security, create a separate [.htaccess](cci:7://file:///Volumes/Storage/SaaS%20Business%20Projects/megaskyshop-laravel/.htaccess:0:0-0:0) in your `public/scripts` directory with:
 
-1. Check the server information displayed at the bottom of each script
-2. Ensure PHP has write permissions to the necessary directories
-3. If symlinks don't work, the scripts will automatically use fallback methods
-4. For file upload issues, ensure the public/uploads directory is writable
-5. If artisan commands fail, check the error output for specific issues
-6. If you see "Unable to list contents" errors related to symlinks, run the `fix_symlink_issue.php` script
-
-
----
-
-## NEW SCRIPT: `fix_prod_error.php` (For Critical Production Errors)
-
-This script is specifically designed to address critical errors like `file_put_contents(...): Failed to open stream: No such file or directory` when it's suspected that production is using incorrect local development paths.
-
-**THE `fix_prod_error.php` SCRIPT IS A TEMPORARY SOLUTION AND POSES A SECURITY RISK IF LEFT ON THE SERVER. DELETE IT IMMEDIATELY AFTER USE.**
-
-### Problem Identification (Current Issue)
-
-The error message:
-`file_put_contents(/Volumes/Storage/SaaS Business Projects/megaskyshop-laravel/storage/framework/views/...): Failed to open stream: No such file or directory`
-indicates that your Laravel application on the production server is likely trying to use paths from your local development environment. This is often due to cached configuration or view files that were deployed from local to production.
-
-### How to Use `fix_prod_error.php`
-
-1.  **Upload**: Ensure `fix_prod_error.php` (which I will create for you) is uploaded to the `public/scripts/` directory on your production server (e.g., `/home/newsquar/megaskyshop.com/public/scripts/fix_prod_error.php`).
-2.  **Access via Browser**: Open your web browser and navigate to `https://megaskyshop.com/scripts/fix_prod_error.php`.
-3.  **Review Output**: The script will attempt to:
-    *   Ensure necessary `storage` and `bootstrap/cache` directories exist and are writable.
-    *   Clear Laravel's configuration, view, route, and general caches. This is the most critical step for the current error.
-    *   Provide diagnostic information.
-    Review the output shown in your browser for any errors or warnings.
-4.  **Test Your Site**: After running the script, try accessing `https://megaskyshop.com/` again to see if the error is resolved.
-5.  **DELETE THE SCRIPT**: This is CRITICAL. Once you've used the script (whether it fixes the issue or not), immediately delete `fix_prod_error.php` from your production server. Leaving it accessible is a major security vulnerability.
-
-### If the Problem Persists after using `fix_prod_error.php`
-
-If the script runs but the issue is not resolved:
-*   Check the script's output for any specific error messages (e.g., permission denied errors that the script couldn't fix).
-*   The underlying issue might be more complex, such as incorrect web server configuration, file ownership problems that the script user cannot change, or issues with the `.env` file on the server.
-*   You may need to find a way to get terminal access or involve your hosting provider to further diagnose and fix file permission or ownership issues at a lower level.
-
-**Relationship to `run_artisan.php`:**
-While `run_artisan.php` can clear caches, `fix_prod_error.php` is more targeted for the specific path issue by also ensuring directory structures and attempting permission fixes *before* cache clearing, which can be crucial if directories like `storage/framework/views` are missing or unwritable.
- 
+```apache
+<FilesMatch "\.(php|php5|phtml)$">
+    Require all denied
+</FilesMatch>
+```
