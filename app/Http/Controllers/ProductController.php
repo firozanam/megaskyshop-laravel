@@ -32,6 +32,25 @@ class ProductController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
         
+        // Filter by price range
+        if ($request->has('price_min') && is_numeric($request->price_min)) {
+            $query->where('price', '>=', $request->price_min);
+        }
+        
+        if ($request->has('price_max') && is_numeric($request->price_max)) {
+            $query->where('price', '<=', $request->price_max);
+        }
+        
+        // Filter by stock status
+        if ($request->has('stock_status') && $request->stock_status === 'in_stock') {
+            $query->where('stock', '>', 0);
+        }
+        
+        // Filter by rating
+        if ($request->has('rating') && is_numeric($request->rating)) {
+            $query->where('avg_rating', '>=', $request->rating);
+        }
+        
         // Sort by price, name, or newest
         if ($request->has('sort')) {
             switch ($request->sort) {
@@ -58,7 +77,7 @@ class ProductController extends Controller
         }
         
         // Get products with images for display
-        $products = $query->with(['images', 'category'])->paginate(12)->withQueryString();
+        $products = $query->with(['images', 'category'])->paginate(16)->withQueryString();
         
         // Get categories for filter dropdown
         $categories = Category::orderBy('name')->get(['id', 'name', 'slug']);
@@ -76,7 +95,7 @@ class ProductController extends Controller
             return Inertia::render('admin/products/index', [
                 'products' => $products,
                 'categories' => $categories,
-                'filters' => $request->only(['search', 'category_id', 'sort'])
+                'filters' => $request->only(['search', 'category_id', 'sort', 'price_min', 'price_max', 'stock_status', 'rating'])
             ]);
         }
         
@@ -84,7 +103,7 @@ class ProductController extends Controller
         return Inertia::render('Products/Index', [
             'products' => $products,
             'categories' => $categories,
-            'filters' => $request->only(['search', 'category_id', 'sort'])
+            'filters' => $request->only(['search', 'category_id', 'sort', 'price_min', 'price_max', 'stock_status', 'rating'])
         ]);
     }
 
@@ -526,7 +545,7 @@ class ProductController extends Controller
     {
         $recentProducts = Product::with('images')
                                  ->orderBy('created_at', 'desc')
-                                 ->take(3)
+                                 ->take(4)
                                  ->get();
         
         $productCount = Product::count();

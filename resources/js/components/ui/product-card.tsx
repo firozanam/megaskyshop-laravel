@@ -25,6 +25,18 @@ export interface ProductProps {
   stock?: number;
   main_image?: string;
   category_id?: number;
+  category?: {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
+    parent_id?: number;
+    image_path?: string;
+    is_active?: number;
+    sort_order?: number;
+    created_at?: string;
+    updated_at?: string;
+  };
   avg_rating?: string | number;
   description?: string;
 }
@@ -134,17 +146,25 @@ export default function ProductCard({
     ? Math.round(((price - salePrice) / price) * 100) 
     : 0;
 
+  // Convert avg_rating to a number between 0-5
+  const rating = product.avg_rating 
+    ? Math.min(5, Math.max(0, ensureNumeric(product.avg_rating)))
+    : 0;
+
+  // Get category name
+  const categoryName = product.category?.name || '';
+
   return (
-    <div className={`bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden transition-all duration-300 hover:shadow-md group flex flex-col h-full ${className}`}>
-      <Link href={`/products/${product.slug || product.id}`} className="block relative w-full pt-[100%] overflow-hidden bg-gray-100">
+    <div className={`bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md group flex flex-col ${className}`}>
+      <Link href={`/products/${product.slug || product.id}`} className="block relative w-full pt-[60%] xs:pt-[65%] sm:pt-[70%] overflow-hidden bg-gray-100">
           {discount > 0 && (
-          <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+          <div className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-yellow-500 text-white text-[10px] xs:text-[11px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full z-10">
               -{discount}%
             </div>
           )}
         {product.stock !== undefined && product.stock <= 0 && (
-          <div className="absolute top-2 right-2">
-            <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+          <div className="absolute top-1 sm:top-2 right-1 sm:right-2">
+            <span className="bg-red-500 text-white px-1.5 py-0.5 rounded-full text-[10px] xs:text-[11px] sm:text-xs font-medium">
                 Out of Stock
             </span>
           </div>
@@ -152,13 +172,13 @@ export default function ProductCard({
           <img 
             src={getImageUrl()}
             alt={product.name}
-          className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-200"
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-200"
             onError={handleImageError}
-          loading={priority ? "eager" : "lazy"}
+            loading={priority ? "eager" : "lazy"}
           />
         {imageError && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <span className="text-gray-400">Image not available</span>
+            <span className="text-gray-400 text-xs">Image not available</span>
           </div>
         )}
         
@@ -166,30 +186,54 @@ export default function ProductCard({
         <button 
           onClick={handleToggleWishlist}
           disabled={isToggling}
-          className="absolute top-2 left-2 p-1.5 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-sm z-10 transition-all duration-200"
+          className="absolute top-1 sm:top-2 left-1 sm:left-2 p-1 sm:p-1.5 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-sm z-10 transition-all duration-200"
           aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
           {isInWishlist ? (
-            <HeartIconSolid className="h-5 w-5 text-red-500" />
+            <HeartIconSolid className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-red-500" />
           ) : (
-            <HeartIcon className="h-5 w-5 text-gray-500 hover:text-red-500" />
+            <HeartIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-gray-500 hover:text-red-500" />
           )}
         </button>
       </Link>
       
-      <div className="p-4 flex flex-col flex-grow">
+      <div className="p-1.5 xs:p-2 sm:p-2.5 md:p-3 flex flex-col flex-grow">
+        {/* Category label */}
+        {categoryName && (
+          <div className="text-[9px] xs:text-[10px] sm:text-xs text-gray-500 truncate">
+            {categoryName}
+          </div>
+        )}
+
         <Link href={`/products/${product.slug || product.id}`} className="flex-grow">
-          <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 transition-colors line-clamp-2 min-h-[3rem]">
+          <h3 className="font-semibold text-[11px] xs:text-xs sm:text-sm md:text-base mb-0.5 sm:mb-1 hover:text-blue-600 transition-colors line-clamp-2 min-h-[3.0em]">
             {product.name}
           </h3>
         </Link>
         
+        {/* Star rating */}
+        <div className="flex items-center mb-0.5 sm:mb-1">
+          {[...Array(5)].map((_, i) => (
+            <svg 
+              key={i} 
+              className={`h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5 ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`} 
+              fill="currentColor" 
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          ))}
+          {rating > 0 && (
+            <span className="ml-0.5 sm:ml-1 text-[8px] xs:text-[9px] sm:text-xs text-gray-500">({rating.toFixed(1)})</span>
+          )}
+        </div>
+        
         <div className="mt-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div className="font-bold text-lg">
+          <div className="flex items-center justify-between mb-0.5 sm:mb-1">
+            <div className="font-bold text-[11px] xs:text-xs sm:text-sm md:text-base">
               {salePrice ? (
                 <>
-                  <span className="text-gray-400 line-through mr-2 text-sm">৳{price.toFixed(2)}</span>
+                  <span className="text-gray-400 line-through mr-0.5 sm:mr-1 text-[8px] xs:text-[9px] sm:text-xs">৳{price.toFixed(2)}</span>
                   <span className="text-gray-800">৳{salePrice.toFixed(2)}</span>
                 </>
               ) : (
@@ -198,16 +242,16 @@ export default function ProductCard({
             </div>
             
             {product.stock !== undefined && (
-              <div className="text-sm text-gray-500">
+              <div className="text-[8px] xs:text-[9px] sm:text-xs text-gray-500 truncate">
                 {product.stock} in stock
               </div>
             )}
           </div>
       
           {showActions && (
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <button 
-                className={`flex-1 py-2 px-4 font-medium text-center text-sm rounded-md transition ${
+                className={`flex-1 py-0.5 xs:py-0.5 sm:py-1 px-0.5 xs:px-1 sm:px-2 font-medium text-center text-[9px] xs:text-[10px] sm:text-xs rounded transition ${
                   product.stock !== undefined && product.stock <= 0
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : addingToCart
@@ -222,7 +266,7 @@ export default function ProductCard({
               </button>
               <Link 
                 href={`/products/${product.slug || product.id}`} 
-                className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition text-center text-sm rounded-md"
+                className="flex-1 py-0.5 xs:py-0.5 sm:py-1 px-0.5 xs:px-1 sm:px-2 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition text-center text-[9px] xs:text-[10px] sm:text-xs rounded"
                 aria-label="View details"
               >
                 View Details

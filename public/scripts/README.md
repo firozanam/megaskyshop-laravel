@@ -104,4 +104,42 @@ If you encounter issues:
 3. If symlinks don't work, the scripts will automatically use fallback methods
 4. For file upload issues, ensure the public/uploads directory is writable
 5. If artisan commands fail, check the error output for specific issues
-6. If you see "Unable to list contents" errors related to symlinks, run the `fix_symlink_issue.php` script 
+6. If you see "Unable to list contents" errors related to symlinks, run the `fix_symlink_issue.php` script
+
+
+---
+
+## NEW SCRIPT: `fix_prod_error.php` (For Critical Production Errors)
+
+This script is specifically designed to address critical errors like `file_put_contents(...): Failed to open stream: No such file or directory` when it's suspected that production is using incorrect local development paths.
+
+**THE `fix_prod_error.php` SCRIPT IS A TEMPORARY SOLUTION AND POSES A SECURITY RISK IF LEFT ON THE SERVER. DELETE IT IMMEDIATELY AFTER USE.**
+
+### Problem Identification (Current Issue)
+
+The error message:
+`file_put_contents(/Volumes/Storage/SaaS Business Projects/megaskyshop-laravel/storage/framework/views/...): Failed to open stream: No such file or directory`
+indicates that your Laravel application on the production server is likely trying to use paths from your local development environment. This is often due to cached configuration or view files that were deployed from local to production.
+
+### How to Use `fix_prod_error.php`
+
+1.  **Upload**: Ensure `fix_prod_error.php` (which I will create for you) is uploaded to the `public/scripts/` directory on your production server (e.g., `/home/newsquar/megaskyshop.com/public/scripts/fix_prod_error.php`).
+2.  **Access via Browser**: Open your web browser and navigate to `https://megaskyshop.com/scripts/fix_prod_error.php`.
+3.  **Review Output**: The script will attempt to:
+    *   Ensure necessary `storage` and `bootstrap/cache` directories exist and are writable.
+    *   Clear Laravel's configuration, view, route, and general caches. This is the most critical step for the current error.
+    *   Provide diagnostic information.
+    Review the output shown in your browser for any errors or warnings.
+4.  **Test Your Site**: After running the script, try accessing `https://megaskyshop.com/` again to see if the error is resolved.
+5.  **DELETE THE SCRIPT**: This is CRITICAL. Once you've used the script (whether it fixes the issue or not), immediately delete `fix_prod_error.php` from your production server. Leaving it accessible is a major security vulnerability.
+
+### If the Problem Persists after using `fix_prod_error.php`
+
+If the script runs but the issue is not resolved:
+*   Check the script's output for any specific error messages (e.g., permission denied errors that the script couldn't fix).
+*   The underlying issue might be more complex, such as incorrect web server configuration, file ownership problems that the script user cannot change, or issues with the `.env` file on the server.
+*   You may need to find a way to get terminal access or involve your hosting provider to further diagnose and fix file permission or ownership issues at a lower level.
+
+**Relationship to `run_artisan.php`:**
+While `run_artisan.php` can clear caches, `fix_prod_error.php` is more targeted for the specific path issue by also ensuring directory structures and attempting permission fixes *before* cache clearing, which can be crucial if directories like `storage/framework/views` are missing or unwritable.
+ 

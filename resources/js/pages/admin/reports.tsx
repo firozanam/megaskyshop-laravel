@@ -165,25 +165,25 @@ export default function Reports({
     <AdminLayout breadcrumbs={breadcrumbs}>
       <Head title="Admin Reports" />
 
-      <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+      <div className="flex flex-1 flex-col gap-3 sm:gap-4 p-3 sm:p-4 md:p-6">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 sm:px-4 sm:py-3 rounded relative mb-3 sm:mb-4 text-sm sm:text-base" role="alert">
             <strong className="font-bold">Error: </strong>
             <span className="block sm:inline">{error}</span>
           </div>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Reports</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               View sales, orders, and customer reports for your store
             </p>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2">
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full xs:w-[150px] sm:w-[180px] text-xs sm:text-sm h-8 sm:h-10">
                 <SelectValue placeholder="Select time range" />
               </SelectTrigger>
               <SelectContent>
@@ -196,104 +196,109 @@ export default function Reports({
               </SelectContent>
             </Select>
             
-            <Button 
-              variant="outline" 
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
-            </Button>
-            
-            <Button 
-              variant="outline"
-              onClick={handleExport}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
+            <div className="flex gap-2 w-full xs:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="text-xs sm:text-sm h-8 sm:h-10 flex-1 xs:flex-none"
+              >
+                <RefreshCw className={`mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={handleExport}
+                className="text-xs sm:text-sm h-8 sm:h-10 flex-1 xs:flex-none"
+              >
+                <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                Export
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+        <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalUsers}</div>
-              <p className="text-xs text-emerald-500">+0.00% from last period</p>
+            <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+              <div className="text-lg sm:text-2xl font-bold">{totalUsers}</div>
+              <p className="text-[10px] sm:text-xs text-emerald-500">+0.00% from last period</p>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Products</CardTitle>
+              <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalProducts}</div>
-              <p className="text-xs text-emerald-500">+38.46% from last period</p>
+            <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+              <div className="text-lg sm:text-2xl font-bold">{totalProducts}</div>
+              <p className="text-[10px] sm:text-xs text-emerald-500">+38.46% from last period</p>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Orders</CardTitle>
+              <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalOrders}</div>
-              <p className="text-xs text-emerald-500">+66.67% from last period</p>
+            <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+              <div className="text-lg sm:text-2xl font-bold">{totalOrders}</div>
+              <p className="text-[10px] sm:text-xs text-emerald-500">+66.67% from last period</p>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">৳{numericTotalRevenue.toFixed(2)}</div>
-              <p className="text-xs text-emerald-500">+199.03% from last period</p>
+            <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+              <div className="text-lg sm:text-2xl font-bold">৳{numericTotalRevenue.toFixed(2)}</div>
+              <p className="text-[10px] sm:text-xs text-emerald-500">+199.03% from last period</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Order Trend</CardTitle>
-              <CardDescription>
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
+          <Card className="overflow-hidden">
+            <CardHeader className="px-3 sm:px-6 py-3 sm:py-4">
+              <CardTitle className="text-base sm:text-lg">Order Trend</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Number of orders placed over time
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
+            <CardContent className="px-2 sm:px-4 pb-3 sm:pb-6">
+              <div className="h-[200px] xs:h-[250px] sm:h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={processedOrderTrend}
                     margin={{
                       top: 5,
-                      right: 30,
-                      left: 20,
+                      right: 10,
+                      left: 0,
                       bottom: 5,
                     }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
+                    <XAxis dataKey="name" tick={{fontSize: 10}} />
+                    <YAxis tick={{fontSize: 10}} width={30} />
+                    <Tooltip contentStyle={{fontSize: '12px'}} />
+                    <Legend wrapperStyle={{fontSize: '10px', marginTop: '10px'}} />
                     <Line 
                       type="monotone" 
                       dataKey="orders" 
                       stroke="#8884d8" 
-                      activeDot={{ r: 8 }} 
+                      activeDot={{ r: 6 }} 
                       strokeWidth={2}
+                      name="orders"
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -301,36 +306,37 @@ export default function Reports({
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue Trend</CardTitle>
-              <CardDescription>
+          <Card className="overflow-hidden">
+            <CardHeader className="px-3 sm:px-6 py-3 sm:py-4">
+              <CardTitle className="text-base sm:text-lg">Revenue Trend</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Revenue generated over time
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
+            <CardContent className="px-2 sm:px-4 pb-3 sm:pb-6">
+              <div className="h-[200px] xs:h-[250px] sm:h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
                     data={processedRevenueTrend}
                     margin={{
                       top: 5,
-                      right: 30,
-                      left: 20,
+                      right: 10,
+                      left: 0,
                       bottom: 5,
                     }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
+                    <XAxis dataKey="name" tick={{fontSize: 10}} />
+                    <YAxis tick={{fontSize: 10}} width={30} />
+                    <Tooltip contentStyle={{fontSize: '12px'}} />
+                    <Legend wrapperStyle={{fontSize: '10px', marginTop: '10px'}} />
                     <Area 
                       type="monotone" 
                       dataKey="revenue" 
                       stroke="#4ade80" 
                       fill="#4ade8080" 
                       strokeWidth={2}
+                      name="revenue"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -340,31 +346,31 @@ export default function Reports({
         </div>
 
         {/* Top Selling Products */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Selling Products</CardTitle>
-            <CardDescription>
+        <Card className="overflow-hidden">
+          <CardHeader className="px-3 sm:px-6 py-3 sm:py-4">
+            <CardTitle className="text-base sm:text-lg">Top Selling Products</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Products with the highest sales volume
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
+          <CardContent className="px-2 sm:px-4 pb-3 sm:pb-6">
+            <div className="h-[200px] xs:h-[250px] sm:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={processedTopProducts}
                   margin={{
                     top: 5,
-                    right: 30,
-                    left: 20,
+                    right: 10,
+                    left: 0,
                     bottom: 5,
                   }}
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="sales" fill="#8884d8" />
+                  <XAxis dataKey="name" tick={{fontSize: 10}} />
+                  <YAxis tick={{fontSize: 10}} width={30} />
+                  <Tooltip contentStyle={{fontSize: '12px'}} />
+                  <Legend wrapperStyle={{fontSize: '10px', marginTop: '10px'}} />
+                  <Bar dataKey="sales" fill="#8884d8" name="sales" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

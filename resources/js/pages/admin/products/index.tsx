@@ -16,7 +16,9 @@ import {
   Upload,
   Download,
   FileUp,
-  AlertCircle
+  AlertCircle,
+  Menu,
+  MoreVertical
 } from 'lucide-react';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -41,9 +43,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatBytes, getPlaceholderImage } from '@/lib/utils';
+import { Pagination } from '@/components/pagination';
 
 // Simplified interface for the ProductIndex component
 interface Product {
@@ -65,6 +74,17 @@ interface Category {
 interface ProductIndexProps {
     products: {
         data: Product[];
+        current_page: number;
+        last_page: number;
+        links: {
+            url: string | null;
+            label: string;
+            active: boolean;
+        }[];
+        from: number;
+        to: number;
+        total: number;
+        per_page: number;
     };
     categories: Category[];
     legacyCategories: string[];
@@ -307,7 +327,7 @@ export default function ProductIndex(props: ProductIndexProps) {
     return (
         <AdminLayout breadcrumbs={breadcrumbs}>
             <Head title="Admin Products" />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4">
+            <div className="flex h-full flex-1 flex-col gap-4 sm:gap-6 p-2 sm:p-4">
                 {/* Flash Messages */}
                 {flash.success && (
                     <Alert className="bg-green-50 text-green-800 border-green-200">
@@ -324,7 +344,7 @@ export default function ProductIndex(props: ProductIndexProps) {
                 
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex flex-col">
-                        <h1 className="text-2xl font-bold">Products</h1>
+                        <h1 className="text-xl sm:text-2xl font-bold">Products</h1>
                         <p className="text-muted-foreground text-sm">
                             Manage your product inventory, prices and details
                         </p>
@@ -333,12 +353,13 @@ export default function ProductIndex(props: ProductIndexProps) {
                         {/* CSV Import Dialog */}
                         <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="outline" className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100">
+                                <Button variant="outline" size="sm" className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 sm:size-default">
                                     <Upload className="mr-2 h-4 w-4" />
-                                    Import CSV
+                                    <span className="hidden xs:inline">Import CSV</span>
+                                    <span className="xs:hidden">Import</span>
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
+                            <DialogContent className="sm:max-w-md max-w-[95vw] w-full">
                                 <DialogHeader>
                                     <DialogTitle>Import Products from CSV</DialogTitle>
                                     <DialogDescription>
@@ -387,18 +408,19 @@ export default function ProductIndex(props: ProductIndexProps) {
                                         </div>
                                     </div>
                                     
-                                    <DialogFooter className="pt-2">
+                                    <DialogFooter className="pt-2 flex-col sm:flex-row gap-2">
                                         <Button
                                             type="button"
                                             variant="ghost"
                                             onClick={() => setImportDialogOpen(false)}
+                                            className="w-full sm:w-auto order-2 sm:order-1"
                                         >
                                             Cancel
                                         </Button>
                                         <Button 
                                             type="submit"
                                             disabled={!selectedFile}
-                                            className="bg-blue-600 hover:bg-blue-700"
+                                            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto order-1 sm:order-2"
                                         >
                                             <FileUp className="mr-2 h-4 w-4" />
                                             Import Products
@@ -411,18 +433,21 @@ export default function ProductIndex(props: ProductIndexProps) {
                         {/* Export Button */}
                         <Button 
                             variant="outline" 
-                            className="border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+                            size="sm"
+                            className="border-green-300 bg-green-50 text-green-700 hover:bg-green-100 sm:size-default"
                             onClick={handleExport}
                         >
                             <Download className="mr-2 h-4 w-4" />
-                            Export CSV
+                            <span className="hidden xs:inline">Export CSV</span>
+                            <span className="xs:hidden">Export</span>
                         </Button>
                         
                         {/* Add Product Button */}
-                        <Link href="/admin/products/create">
-                            <Button className="bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                        <Link href="/admin/products/create" className="flex-grow sm:flex-grow-0">
+                            <Button className="bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm w-full sm:w-auto">
                                 <PlusCircle className="mr-2 h-4 w-4" />
-                                Add Product
+                                <span className="hidden xs:inline">Add Product</span>
+                                <span className="xs:hidden">Add</span>
                             </Button>
                         </Link>
                     </div>
@@ -430,12 +455,12 @@ export default function ProductIndex(props: ProductIndexProps) {
                 
                 {/* Search filters indicator */}
                 {(searchQuery || categoryFilter !== 'all') && (
-                    <div className="bg-blue-50 border border-blue-100 text-blue-700 px-4 py-2 rounded-md flex items-center justify-between">
+                    <div className="bg-blue-50 border border-blue-100 text-blue-700 px-3 sm:px-4 py-2 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex flex-wrap gap-2 items-center">
                             <span className="font-medium">Active filters:</span>
                             {searchQuery && (
-                                <Badge variant="outline" className="bg-white flex items-center gap-1 pl-2">
-                                    Search: {searchQuery}
+                                <Badge variant="outline" className="bg-white flex items-center gap-1 pl-2 text-xs sm:text-sm">
+                                    <span className="truncate max-w-[150px] sm:max-w-[200px]">Search: {searchQuery}</span>
                                     <button 
                                         onClick={() => handleSearchChange('')}
                                         className="ml-1 hover:bg-blue-100 rounded-full p-0.5"
@@ -445,8 +470,8 @@ export default function ProductIndex(props: ProductIndexProps) {
                                 </Badge>
                             )}
                             {categoryFilter !== 'all' && (
-                                <Badge variant="outline" className="bg-white flex items-center gap-1 pl-2">
-                                    Category: {categoryFilter}
+                                <Badge variant="outline" className="bg-white flex items-center gap-1 pl-2 text-xs sm:text-sm">
+                                    <span className="truncate max-w-[150px] sm:max-w-[200px]">Category: {categoryFilter}</span>
                                     <button 
                                         onClick={() => handleCategoryChange('all')}
                                         className="ml-1 hover:bg-blue-100 rounded-full p-0.5"
@@ -460,7 +485,7 @@ export default function ProductIndex(props: ProductIndexProps) {
                             variant="ghost"
                             size="sm"
                             onClick={clearSearch}
-                            className="text-blue-700 hover:bg-blue-100"
+                            className="text-blue-700 hover:bg-blue-100 text-xs sm:text-sm"
                         >
                             Clear All Filters
                         </Button>
@@ -471,13 +496,15 @@ export default function ProductIndex(props: ProductIndexProps) {
                     <CardHeader className="pb-3">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div>
-                                <CardTitle className="text-xl flex items-center gap-2">
+                                <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
                                     <Package className="h-5 w-5 text-gray-500" />
                                     Product Management
                                 </CardTitle>
                                 <CardDescription>
                                     {products.length > 0 
-                                        ? `Showing ${products.length} products` 
+                                        ? props.products.total > 0
+                                            ? `Showing ${props.products.from} to ${props.products.to} of ${props.products.total} products` 
+                                            : `Showing ${products.length} products`
                                         : 'No products found'}
                                 </CardDescription>
                             </div>
@@ -527,46 +554,133 @@ export default function ProductIndex(props: ProductIndexProps) {
                         {/* Products list view */}
                         <div className="overflow-x-auto rounded-md">
                             {products.length > 0 ? (
-                                <table className="w-full table-auto">
-                                    <thead>
-                                        <tr className="bg-gray-50 text-left border-y">
-                                            <th className="px-4 py-3 text-sm font-medium text-gray-500">
-                                                <div className="flex items-center gap-1">
-                                                    Image
-                                                </div>
-                                            </th>
-                                            <th className="px-4 py-3 text-sm font-medium text-gray-500">
-                                                <div className="flex items-center gap-1">
-                                                    Product Name
-                                                    <ArrowUpDown className="h-3 w-3" />
-                                                </div>
-                                            </th>
-                                            <th className="px-4 py-3 text-sm font-medium text-gray-500">
-                                                <div className="flex items-center gap-1">
-                                                    Category
-                                                    <ArrowUpDown className="h-3 w-3" />
-                                                </div>
-                                            </th>
-                                            <th className="px-4 py-3 text-sm font-medium text-gray-500">
-                                                <div className="flex items-center gap-1">
-                                                    Price
-                                                    <ArrowUpDown className="h-3 w-3" />
-                                                </div>
-                                            </th>
-                                            <th className="px-4 py-3 text-sm font-medium text-gray-500">
-                                                <div className="flex items-center gap-1">
-                                                    Stock
-                                                    <ArrowUpDown className="h-3 w-3" />
-                                                </div>
-                                            </th>
-                                            <th className="px-4 py-3 text-sm font-medium text-gray-500 text-center">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
+                                <div className="min-w-full">
+                                    {/* Desktop Table View */}
+                                    <table className="w-full table-auto hidden sm:table">
+                                        <thead>
+                                            <tr className="bg-gray-50 text-left border-y">
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-500">
+                                                    <div className="flex items-center gap-1">
+                                                        Image
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-500">
+                                                    <div className="flex items-center gap-1">
+                                                        Product Name
+                                                        <ArrowUpDown className="h-3 w-3" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-500">
+                                                    <div className="flex items-center gap-1">
+                                                        Category
+                                                        <ArrowUpDown className="h-3 w-3" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-500">
+                                                    <div className="flex items-center gap-1">
+                                                        Price
+                                                        <ArrowUpDown className="h-3 w-3" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-500">
+                                                    <div className="flex items-center gap-1">
+                                                        Stock
+                                                        <ArrowUpDown className="h-3 w-3" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-500 text-center">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200">
+                                            {products.map((product) => (
+                                                <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-4 py-3 w-24">
+                                                        <div className="h-16 w-16 rounded-md border border-gray-200 overflow-hidden flex-shrink-0">
+                                                            <img 
+                                                                src={getImagePath(product.main_image)}
+                                                                alt={product.name}
+                                                                className="h-full w-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.currentTarget.src = getPlaceholderImage();
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="font-medium text-gray-900">{product.name}</div>
+                                                        <div className="text-sm text-gray-500">ID: {product.id}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                                            {getCategoryName(product)}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-4 py-3 font-medium">{formatPrice(product.price)}</td>
+                                                    <td className="px-4 py-3">
+                                                        {getStockBadge(product.stock)}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex gap-2 justify-center">
+                                                            <TooltipProvider>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Link href={`/products/${product.id}`} target="_blank">
+                                                                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                                                                <Eye className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </Link>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p>View Product</p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+                                                            
+                                                            <TooltipProvider>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Link href={`/admin/products/${product.id}/edit`}>
+                                                                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50">
+                                                                                <Edit className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </Link>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p>Edit Product</p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+                                                            
+                                                            <TooltipProvider>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Button 
+                                                                            size="sm" 
+                                                                            variant="ghost"
+                                                                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                                            onClick={() => handleDelete(product.id)}
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p>Delete Product</p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    
+                                    {/* Mobile Card View */}
+                                    <div className="sm:hidden divide-y divide-gray-200">
                                         {products.map((product) => (
-                                            <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-4 py-3 w-24">
-                                                    <div className="h-16 w-16 rounded-md border border-gray-200 overflow-hidden flex-shrink-0">
+                                            <div key={product.id} className="p-4 hover:bg-gray-50 transition-colors">
+                                                <div className="flex gap-3">
+                                                    <div className="h-20 w-20 rounded-md border border-gray-200 overflow-hidden flex-shrink-0">
                                                         <img 
                                                             src={getImagePath(product.main_image)}
                                                             alt={product.name}
@@ -576,75 +690,52 @@ export default function ProductIndex(props: ProductIndexProps) {
                                                             }}
                                                         />
                                                     </div>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="font-medium text-gray-900">{product.name}</div>
-                                                    <div className="text-sm text-gray-500">ID: {product.id}</div>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                                                        {getCategoryName(product)}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-4 py-3 font-medium">{formatPrice(product.price)}</td>
-                                                <td className="px-4 py-3">
-                                                    {getStockBadge(product.stock)}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex gap-2 justify-center">
-                                                        <TooltipProvider>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Link href={`/products/${product.id}`} target="_blank">
-                                                                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                                                            <Eye className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </Link>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>View Product</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </TooltipProvider>
-                                                        
-                                                        <TooltipProvider>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Link href={`/admin/products/${product.id}/edit`}>
-                                                                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50">
-                                                                            <Edit className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </Link>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>Edit Product</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </TooltipProvider>
-                                                        
-                                                        <TooltipProvider>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Button 
-                                                                        size="sm" 
-                                                                        variant="ghost"
-                                                                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                                        onClick={() => handleDelete(product.id)}
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex justify-between items-start">
+                                                            <div className="font-medium text-gray-900 truncate">{product.name}</div>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                                        <MoreVertical className="h-4 w-4" />
                                                                     </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>Delete Product</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </TooltipProvider>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuItem asChild>
+                                                                        <Link href={`/products/${product.id}`} target="_blank" className="cursor-pointer flex items-center">
+                                                                            <Eye className="h-4 w-4 mr-2" />
+                                                                            View
+                                                                        </Link>
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem asChild>
+                                                                        <Link href={`/admin/products/${product.id}/edit`} className="cursor-pointer flex items-center text-blue-600">
+                                                                            <Edit className="h-4 w-4 mr-2" />
+                                                                            Edit
+                                                                        </Link>
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem 
+                                                                        onClick={() => handleDelete(product.id)}
+                                                                        className="cursor-pointer text-red-500"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4 mr-2" />
+                                                                        Delete
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
+                                                        <div className="text-xs text-gray-500 mb-1">ID: {product.id}</div>
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
+                                                                {getCategoryName(product)}
+                                                            </Badge>
+                                                            <div className="font-medium text-sm">{formatPrice(product.price)}</div>
+                                                            {getStockBadge(product.stock)}
+                                                        </div>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </div>
+                                            </div>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </div>
+                                </div>
                             ) : (
                                 <div className="text-center py-12 px-4 border-t">
                                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
@@ -675,6 +766,19 @@ export default function ProductIndex(props: ProductIndexProps) {
                                 </div>
                             )}
                         </div>
+                        
+                        {/* Pagination */}
+                        {props.products && props.products.data && props.products.data.length > 0 && (
+                            <div className="py-4 sm:py-6 px-4 border-t border-gray-200 overflow-x-auto">
+                                <div className="flex items-center justify-center">
+                                    <Pagination 
+                                        currentPage={props.products.current_page}
+                                        lastPage={props.products.last_page}
+                                        links={props.products.links}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

@@ -45,7 +45,13 @@ class FeaturedProduct extends Model
      */
     public static function getAllActive()
     {
-        return self::with(['product', 'product.images'])
+        return self::with([
+                'product', 
+                'product.category',
+                'product.images' => function($query) {
+                    $query->select('id', 'product_id', 'image_path', 'is_main');
+                }
+            ])
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->get();

@@ -52,7 +52,7 @@ export default function FeaturedProducts({ title, products }: FeaturedProductsPr
     }, []);
 
     return (
-        <section className="relative py-16 overflow-hidden">
+        <section className="relative py-4 sm:py-6 md:py-8 overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-[linear-gradient(135deg,hsl(var(--muted-foreground)/.03)_1px,transparent_1px),linear-gradient(45deg,hsl(var(--muted-foreground)/.03)_1px,transparent_1px)] bg-[size:40px_40px] -z-10" />
             
@@ -61,8 +61,8 @@ export default function FeaturedProducts({ title, products }: FeaturedProductsPr
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-[hsl(var(--primary)/.1)] rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-12 relative">
-                    <h2 className="text-4xl font-bold mb-4 text-[#374151] animate-[fadeIn_1s_ease-out]">
+                <div className="text-center mb-4 sm:mb-6 md:mb-8 relative">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 text-[#374151] animate-[fadeIn_1s_ease-out]">
                         {title}
                     </h2>
                     <div className="relative h-1 mx-auto">
@@ -72,16 +72,21 @@ export default function FeaturedProducts({ title, products }: FeaturedProductsPr
 
                 {productsWithStock.length > 0 ? (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 xs:gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 mb-4 sm:mb-6 md:mb-8">
                             {productsWithStock.map((product, index) => (
                                 <div
                                     key={product.id}
-                                    className="transform hover:scale-105 transition-all duration-300"
-                                    style={{ animationDelay: `${index * 100}ms` }}
+                                    className="transform hover:-translate-y-1 transition-all duration-300"
+                                    style={{ 
+                                        animationDelay: `${index * 100}ms`,
+                                        animationName: 'fadeIn',
+                                        animationDuration: '0.5s',
+                                        animationFillMode: 'both'
+                                    }}
                                 >
                                     <ProductCard 
                                         product={product}
-                                        className="h-full"
+                                        className="h-auto w-full"
                                     />
                                 </div>
                             ))}
@@ -96,8 +101,8 @@ export default function FeaturedProducts({ title, products }: FeaturedProductsPr
                         </div>
                     </>
                 ) : (
-                    <div className="text-center py-12 bg-card/50 backdrop-blur-sm rounded-xl border border-border">
-                        <p className="text-xl text-muted-foreground">
+                    <div className="text-center py-6 sm:py-8 md:py-12 bg-card/50 backdrop-blur-sm rounded-xl border border-border">
+                        <p className="text-lg sm:text-xl text-muted-foreground">
                             No featured products available.
                         </p>
                     </div>

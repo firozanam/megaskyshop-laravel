@@ -1,6 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
 import { useState, useEffect } from 'react';
+import { Edit, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface HomepageSection {
   id: number;
@@ -154,20 +157,45 @@ export default function HomepageSectionsIndex({ sections }: Props) {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(section.updated_at).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center">
-                          <Link
-                            href={route('admin.homepage.sections.edit', section.id)}
-                            className="text-indigo-600 hover:text-indigo-900 mr-4"
-                          >
-                            Edit Section
-                          </Link>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center space-x-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link
+                                  href={route('admin.homepage.sections.edit', section.id)}
+                                  className="text-indigo-600 hover:text-indigo-900"
+                                >
+                                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                    <Edit className="h-4 w-4" />
+                                    <span className="sr-only">Edit Section</span>
+                                  </Button>
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Edit Section</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
                           {section.section_name === 'featured_products' && (
-                            <Link
-                              href={route('admin.homepage.featured-products')}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              Manage Products
-                            </Link>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Link
+                                    href={route('admin.homepage.featured-products')}
+                                    className="text-blue-600 hover:text-blue-900"
+                                  >
+                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                      <Settings className="h-4 w-4" />
+                                      <span className="sr-only">Manage Products</span>
+                                    </Button>
+                                  </Link>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Manage Products</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           )}
                         </td>
                       </tr>

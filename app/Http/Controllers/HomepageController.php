@@ -56,7 +56,12 @@ class HomepageController extends Controller
         
         // Get featured products for the featured products section
         $featuredProducts = FeaturedProduct::getAllActive()->map(function($featuredProduct) {
-            return $featuredProduct->product;
+            $product = $featuredProduct->product;
+            // Make sure category is included
+            if ($product) {
+                $product->load('category');
+            }
+            return $product;
         });
         
         // Get all products for the order form section
@@ -200,11 +205,23 @@ class HomepageController extends Controller
      */
     public function featuredProductsIndex()
     {
-        $featuredProducts = FeaturedProduct::with('product')
+        $featuredProducts = FeaturedProduct::with([
+                'product', 
+                'product.category',
+                'product.images' => function($query) {
+                    $query->select('id', 'product_id', 'image_path', 'is_main');
+                }
+            ])
             ->orderBy('sort_order')
             ->get();
         
-        $products = Product::whereNotIn('id', $featuredProducts->pluck('product_id'))
+        $products = Product::with([
+                'category',
+                'images' => function($query) {
+                    $query->select('id', 'product_id', 'image_path', 'is_main');
+                }
+            ])
+            ->whereNotIn('id', $featuredProducts->pluck('product_id'))
             ->get();
         
         return Inertia::render('admin/homepage/featured-products', [
