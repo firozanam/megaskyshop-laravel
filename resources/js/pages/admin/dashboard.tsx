@@ -69,24 +69,37 @@ export default function AdminDashboard({ recentProducts = [], productCount = 0 }
             <Head title="Admin Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 sm:gap-6 p-3 sm:p-4">
                 <div className="flex flex-col gap-3 sm:gap-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-                        <h1 className="text-xl sm:text-2xl font-bold">Admin Dashboard</h1>
-                        <div className="flex flex-wrap gap-2">
-                            <Link href="/admin/products" preserveScroll={false} className="w-full xs:w-auto">
-                                <Button variant="outline" className="w-full xs:w-auto text-xs sm:text-sm">
-                                    <List className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                    Manage Products
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                        <h1 className="text-xl sm:text-2xl font-bold leading-tight">Admin Dashboard</h1>
+                        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <Link 
+                                href="/admin/products" 
+                                preserveScroll={false} 
+                                className="w-full xs:w-auto min-w-[150px]"
+                            >
+                                <Button 
+                                    variant="outline" 
+                                    className="w-full xs:w-auto text-xs sm:text-sm h-9 sm:h-10"
+                                >
+                                    <List className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                                    <span className="truncate">Manage Products</span>
                                 </Button>
                             </Link>
-                            <Link href="/admin/products/create" preserveScroll={false} className="w-full xs:w-auto">
-                                <Button className="w-full xs:w-auto text-xs sm:text-sm">
-                                    <PlusCircle className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                    Add Product
+                            <Link 
+                                href="/admin/products/create" 
+                                preserveScroll={false} 
+                                className="w-full xs:w-auto min-w-[150px]"
+                            >
+                                <Button 
+                                    className="w-full xs:w-auto text-xs sm:text-sm h-9 sm:h-10"
+                                >
+                                    <PlusCircle className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                                    <span className="truncate">Add Product</span>
                                 </Button>
                             </Link>
                         </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                         Welcome to the admin dashboard. Manage your products, users, and store settings.
                     </p>
                 </div>

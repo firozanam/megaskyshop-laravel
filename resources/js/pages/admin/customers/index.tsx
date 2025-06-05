@@ -32,6 +32,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { Pagination } from '@/components/pagination';
+import { Eye } from 'lucide-react';
 
 interface Customer {
     customer_id: string;
@@ -241,19 +242,19 @@ export default function CustomersIndex({ customers, filters = {}, flash = {} }: 
                     <CardContent className="space-y-4">
                         <div className="flex flex-col sm:flex-row gap-4">
                             {/* Search */}
-                            <form onSubmit={handleSearch} className="flex gap-2 flex-1">
+                            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 flex-1">
                                 <div className="flex-1 relative">
                                     <Input
                                         type="text"
                                         placeholder="Search by name, email or phone"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="pl-10"
+                                        className="pl-10 w-full"
                                     />
                                     <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                                 </div>
                                 
-                                <Button type="submit" disabled={isSearching}>
+                                <Button type="submit" disabled={isSearching} className="w-full sm:w-auto">
                                     {isSearching ? 'Searching...' : 'Search'}
                                 </Button>
                             </form>
@@ -273,26 +274,26 @@ export default function CustomersIndex({ customers, filters = {}, flash = {} }: 
                         
                         {/* Active Filters */}
                         {(search || customerType !== 'all' || sortBy !== 'last_order_date' || sortDirection !== 'desc') && (
-                            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
-                                <div className="text-sm text-gray-500">
-                                    <span className="font-medium">Active filters:</span>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-gray-50 p-3 rounded-md">
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="text-sm font-medium text-gray-500">Active filters:</span>
                                     {search && (
-                                        <Badge variant="outline" className="ml-2 bg-white">
+                                        <Badge variant="outline" className="bg-white">
                                             Search: {search}
                                         </Badge>
                                     )}
                                     {customerType !== 'all' && (
-                                        <Badge variant="outline" className="ml-2 bg-white">
-                                            Type: {customerType === 'registered' ? 'Registered Users' : 'Guest Users'}
+                                        <Badge variant="outline" className="bg-white">
+                                            Type: {customerType === 'registered' ? 'Registered' : 'Guest'}
                                         </Badge>
                                     )}
                                     {(sortBy !== 'last_order_date' || sortDirection !== 'desc') && (
-                                        <Badge variant="outline" className="ml-2 bg-white">
-                                            Sort: {sortBy} ({sortDirection === 'asc' ? 'ascending' : 'descending'})
+                                        <Badge variant="outline" className="bg-white">
+                                            Sort: {sortBy} ({sortDirection === 'asc' ? 'asc' : 'desc'})
                                         </Badge>
                                     )}
                                 </div>
-                                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                                <Button variant="ghost" size="sm" onClick={clearFilters} className="mt-2 sm:mt-0">
                                     Clear All
                                 </Button>
                             </div>
@@ -312,150 +313,193 @@ export default function CustomersIndex({ customers, filters = {}, flash = {} }: 
                     </CardHeader>
                     <CardContent>
                         {customers.data && customers.data.length > 0 ? (
-                            <div className="rounded-md border">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="bg-gray-50">
-                                            <TableHead className="w-[200px]">
-                                                <button 
-                                                    className="flex items-center gap-1 font-medium hover:text-blue-600"
-                                                    onClick={() => handleSortChange('name')}
-                                                >
-                                                    <UserCircle className="h-4 w-4 text-gray-500" />
-                                                    Customer
-                                                    {getSortIndicator('name')}
-                                                </button>
-                                            </TableHead>
-                                            <TableHead>
-                                                <button 
-                                                    className="flex items-center gap-1 font-medium hover:text-blue-600"
-                                                    onClick={() => handleSortChange('email')}
-                                                >
-                                                    <Mail className="h-4 w-4 text-gray-500" />
-                                                    Email
-                                                    {getSortIndicator('email')}
-                                                </button>
-                                            </TableHead>
-                                            <TableHead>
-                                                <div className="flex items-center gap-1 font-medium">
-                                                    <Phone className="h-4 w-4 text-gray-500" />
-                                                    Phone
-                                                </div>
-                                            </TableHead>
-                                            <TableHead>
-                                                <button 
-                                                    className="flex items-center gap-1 font-medium hover:text-blue-600"
-                                                    onClick={() => handleSortChange('first_order_date')}
-                                                >
-                                                    <CalendarClock className="h-4 w-4 text-gray-500" />
-                                                    Joined
-                                                    {getSortIndicator('first_order_date')}
-                                                </button>
-                                            </TableHead>
-                                            <TableHead>
-                                                <button 
-                                                    className="flex items-center gap-1 font-medium hover:text-blue-600"
-                                                    onClick={() => handleSortChange('order_count')}
-                                                >
-                                                    <ShoppingBag className="h-4 w-4 text-gray-500" />
-                                                    Orders
-                                                    {getSortIndicator('order_count')}
-                                                </button>
-                                            </TableHead>
-                                            <TableHead>
-                                                <button 
-                                                    className="flex items-center gap-1 font-medium hover:text-blue-600"
-                                                    onClick={() => handleSortChange('total_spent')}
-                                                >
-                                                    <CreditCard className="h-4 w-4 text-gray-500" />
-                                                    Total Spent
-                                                    {getSortIndicator('total_spent')}
-                                                </button>
-                                            </TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {customers.data.map((customer) => (
-                                            <TableRow key={customer.customer_id} className="hover:bg-gray-50">
-                                                <TableCell className="font-medium">
-                                                    <div className="flex flex-col">
-                                                        <div className="flex items-center gap-2">
-                                                            {customer.name}
-                                                            <Badge 
-                                                                variant="outline" 
-                                                                className={customer.customer_type === 'registered' 
-                                                                    ? 'bg-green-50 text-green-700 border-green-200' 
-                                                                    : 'bg-gray-50 text-gray-700 border-gray-200'}
-                                                            >
-                                                                {customer.customer_type === 'registered' ? 'Registered' : 'Guest'}
-                                                            </Badge>
-                                                        </div>
+                            <div className="overflow-x-auto">
+                                {/* Desktop view */}
+                                <div className="hidden sm:block">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-gray-50">
+                                                <TableHead className="w-[200px] sm:w-auto">
+                                                    <button 
+                                                        className="flex items-center gap-1 font-medium hover:text-blue-600"
+                                                        onClick={() => handleSortChange('name')}
+                                                    >
+                                                        <UserCircle className="h-4 w-4 text-gray-500" />
+                                                        Customer
+                                                        {getSortIndicator('name')}
+                                                    </button>
+                                                </TableHead>
+                                                <TableHead className="hidden md:table-cell">
+                                                    <button 
+                                                        className="flex items-center gap-1 font-medium hover:text-blue-600"
+                                                        onClick={() => handleSortChange('email')}
+                                                    >
+                                                        <Mail className="h-4 w-4 text-gray-500" />
+                                                        Email
+                                                        {getSortIndicator('email')}
+                                                    </button>
+                                                </TableHead>
+                                                <TableHead className="hidden lg:table-cell">
+                                                    <div className="flex items-center gap-1 font-medium">
+                                                        <Phone className="h-4 w-4 text-gray-500" />
+                                                        Phone
                                                     </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {customer.email || 
-                                                        <span className="text-gray-400 italic">Not provided</span>
-                                                    }
-                                                </TableCell>
-                                                <TableCell className="font-medium">
-                                                    {customer.mobile}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formatDate(customer.first_order_date)}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="font-semibold">{customer.order_count}</span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formatCurrency(customer.total_spent)}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <Link href={`/admin/customers/${customer.customer_id}`}>
-                                                            <Button size="sm" variant="outline">
-                                                                View Details
-                                                            </Button>
-                                                        </Link>
+                                                </TableHead>
+                                                <TableHead className="hidden md:table-cell">
+                                                    <button 
+                                                        className="flex items-center gap-1 font-medium hover:text-blue-600"
+                                                        onClick={() => handleSortChange('first_order_date')}
+                                                    >
+                                                        <CalendarClock className="h-4 w-4 text-gray-500" />
+                                                        Joined
+                                                        {getSortIndicator('first_order_date')}
+                                                    </button>
+                                                </TableHead>
+                                                <TableHead>
+                                                    <button 
+                                                        className="flex items-center gap-1 font-medium hover:text-blue-600"
+                                                        onClick={() => handleSortChange('order_count')}
+                                                    >
+                                                        <ShoppingBag className="h-4 w-4 text-gray-500" />
+                                                        Orders
+                                                        {getSortIndicator('order_count')}
+                                                    </button>
+                                                </TableHead>
+                                                <TableHead className="hidden lg:table-cell">
+                                                    <button 
+                                                        className="flex items-center gap-1 font-medium hover:text-blue-600"
+                                                        onClick={() => handleSortChange('total_spent')}
+                                                    >
+                                                        <CreditCard className="h-4 w-4 text-gray-500" />
+                                                        Total Spent
+                                                        {getSortIndicator('total_spent')}
+                                                    </button>
+                                                </TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {customers.data.map((customer) => (
+                                                <TableRow key={customer.customer_id} className="hover:bg-gray-50">
+                                                    <TableCell className="font-medium">
+                                                        <div className="flex flex-col">
+                                                            <div className="flex items-center gap-2">
+                                                                {customer.name}
+                                                                <Badge 
+                                                                    variant="outline" 
+                                                                    className={customer.customer_type === 'registered' 
+                                                                        ? 'bg-green-50 text-green-700 border-green-200' 
+                                                                        : 'bg-gray-50 text-gray-700 border-gray-200'}
+                                                                >
+                                                                    {customer.customer_type === 'registered' ? 'Registered' : 'Guest'}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="hidden md:table-cell">
+                                                        {customer.email || 
+                                                            <span className="text-gray-400 italic">Not provided</span>
+                                                        }
+                                                    </TableCell>
+                                                    <TableCell className="hidden lg:table-cell font-medium">
+                                                        {customer.mobile}
+                                                    </TableCell>
+                                                    <TableCell className="hidden md:table-cell">
+                                                        {formatDate(customer.first_order_date)}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="font-semibold">{customer.order_count}</span>
+                                                    </TableCell>
+                                                    <TableCell className="hidden lg:table-cell">
+                                                        {formatCurrency(customer.total_spent)}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            <Link href={`/admin/customers/${customer.customer_id}`}>
+                                                                <Button size="sm" variant="outline">
+                                                                    View Details
+                                                                </Button>
+                                                            </Link>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                        <TableFooter>
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-right">
+                                                    <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
+                                                        Showing {customers.from} to {customers.to} of {customers.total} customers
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                    <TableFooter>
-                                        <TableRow>
-                                            <TableCell colSpan={7} className="text-right">
-                                                <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-                                                    Showing {customers.from} to {customers.to} of {customers.total} customers
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableFooter>
-                                </Table>
+                                        </TableFooter>
+                                    </Table>
+                                </div>
                                 
-                                {/* Pagination */}
-                                <div className="mt-4 flex items-center justify-center">
-                                    <Pagination 
-                                        currentPage={customers.current_page}
-                                        lastPage={customers.last_page}
-                                        links={customers.links}
-                                    />
+                                {/* Mobile view */}
+                                <div className="sm:hidden space-y-4">
+                                    {customers.data.map((customer) => (
+                                        <Card key={customer.customer_id} className="p-4">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <div className="font-medium flex items-center gap-2 mb-1">
+                                                        <UserCircle className="h-4 w-4 text-gray-500" />
+                                                        {customer.name}
+                                                        <Badge 
+                                                            variant="outline" 
+                                                            className={customer.customer_type === 'registered' 
+                                                                ? 'bg-green-50 text-green-700 border-green-200' 
+                                                                : 'bg-gray-50 text-gray-700 border-gray-200'}
+                                                        >
+                                                            {customer.customer_type === 'registered' ? 'Registered' : 'Guest'}
+                                                        </Badge>
+                                                    </div>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        {customer.email || 'No email provided'}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-medium">{customer.order_count} orders</div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {formatCurrency(customer.total_spent)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="mt-3 pt-3 border-t flex flex-wrap gap-4">
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <Phone className="h-4 w-4 text-gray-400" />
+                                                    {customer.mobile}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <CalendarClock className="h-4 w-4 text-gray-400" />
+                                                    {formatDate(customer.first_order_date)}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="mt-3 pt-3 border-t flex justify-end">
+                                                <Link href={`#`} className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+                                                    <Eye className="h-4 w-4" /> View
+                                                </Link>
+                                            </div>
+                                        </Card>
+                                    ))}
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <UserCircle className="h-12 w-12 text-gray-300 mb-4" />
-                                <h3 className="text-lg font-medium text-gray-900 mb-1">No customers found</h3>
-                                <p className="text-gray-500 mb-4 max-w-md">
-                                    {search || customerType !== 'all'
-                                        ? "No customers match your search criteria. Try adjusting your filters."
-                                        : "There are no customers in the system yet. Customers will appear here after they place orders."}
-                                </p>
-                                {(search || customerType !== 'all') && (
-                                    <Button variant="outline" onClick={clearFilters}>
-                                        Clear Filters
-                                    </Button>
-                                )}
+                            <div className="text-center py-8 text-muted-foreground">
+                                No customers found
+                            </div>
+                        )}
+                        
+                        {customers.total > 0 && (
+                            <div className="mt-4">
+                                <Pagination 
+                                    links={customers.links}
+                                    currentPage={customers.current_page}
+                                    lastPage={customers.last_page}
+                                />
                             </div>
                         )}
                     </CardContent>

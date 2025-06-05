@@ -55,11 +55,11 @@ export default function HomepageSectionsIndex({ sections }: Props) {
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
           {/* Featured Products Management Card */}
           <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 overflow-hidden shadow-sm sm:rounded-lg border border-blue-200">
-            <div className="p-6">
-              <div className="flex justify-between items-center">
+            <div className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Featured Products Section</h2>
-                  <p className="text-gray-600 mt-1">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Featured Products Section</h2>
+                  <p className="text-sm sm:text-base text-gray-600 mt-1">
                     {featuredProductsSection && featuredProductsSection.is_active 
                       ? 'This section is currently active on your homepage' 
                       : 'This section is currently inactive on your homepage'}
@@ -67,9 +67,9 @@ export default function HomepageSectionsIndex({ sections }: Props) {
                 </div>
                 <Link 
                   href={route('admin.homepage.featured-products')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center"
+                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center justify-center text-sm sm:text-base"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   Manage Featured Products
@@ -77,18 +77,18 @@ export default function HomepageSectionsIndex({ sections }: Props) {
               </div>
               
               {featuredProductsSection && (
-                <div className="mt-4 flex items-center">
-                  <div className="flex-1">
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex-1 space-y-2">
                     <div className="text-sm text-gray-600">
                       <span className="font-medium">Display Order:</span> {featuredProductsSection.sort_order}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="text-sm text-gray-600">
                       <span className="font-medium">Title:</span> {featuredProductsSection.title || 'No title set'}
                     </div>
                   </div>
                   <Link
                     href={route('admin.homepage.sections.edit', featuredProductsSection.id)}
-                    className="px-3 py-1 bg-white text-blue-600 border border-blue-300 rounded hover:bg-blue-50 transition text-sm"
+                    className="px-3 py-1 bg-white text-blue-600 border border-blue-300 rounded hover:bg-blue-50 transition text-sm text-center"
                   >
                     Edit Section Settings
                   </Link>
@@ -99,12 +99,13 @@ export default function HomepageSectionsIndex({ sections }: Props) {
 
           {/* Main Sections Management */}
           <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div className="p-6 bg-white border-b border-gray-200">
-              <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-semibold text-gray-900">All Homepage Sections</h1>
+            <div className="p-4 sm:p-6 bg-white border-b border-gray-200">
+              <div className="flex justify-between items-center mb-4 sm:mb-6">
+                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">All Homepage Sections</h1>
               </div>
 
-              <div className="overflow-x-auto">
+              {/* Desktop view */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -202,6 +203,86 @@ export default function HomepageSectionsIndex({ sections }: Props) {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile view */}
+              <div className="sm:hidden space-y-4">
+                {activeSections.map((section) => (
+                  <div 
+                    key={section.id} 
+                    className={`p-4 border rounded-lg ${section.section_name === 'featured_products' ? 'bg-blue-50 border-blue-200' : 'border-gray-200'}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-gray-900 flex items-center">
+                          {formatSectionName(section.section_name)}
+                          {section.section_name === 'featured_products' && (
+                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              Special Management
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Title:</span> {section.title || '-'}
+                        </p>
+                      </div>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${section.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {section.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-500">Order:</span> {section.sort_order}
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Updated:</span> {new Date(section.updated_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 flex gap-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link
+                              href={route('admin.homepage.sections.edit', section.id)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Edit Section</span>
+                              </Button>
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Edit Section</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      {section.section_name === 'featured_products' && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link
+                                href={route('admin.homepage.featured-products')}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                  <Settings className="h-4 w-4" />
+                                  <span className="sr-only">Manage Products</span>
+                                </Button>
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Manage Products</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

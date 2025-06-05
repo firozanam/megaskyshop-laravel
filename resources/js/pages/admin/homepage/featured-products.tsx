@@ -639,8 +639,8 @@ export default function FeaturedProducts({ featuredProducts, availableProducts }
     <AdminLayout>
       <Head title="Manage Featured Products" />
 
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+      <div className="py-4 sm:py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           {/* Breadcrumb Navigation - Update styles */}
           <nav className="flex items-center space-x-2 text-sm text-gray-600">
             <Link 
@@ -683,8 +683,7 @@ export default function FeaturedProducts({ featuredProducts, availableProducts }
                     }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-7-4a1 1 0 00-1 1v3a1 1 0 001 1h1a1 1 0 001-1v-3a1 1 0 00-1-1H8z" />
                     </svg>
                     {showPreview ? 'Hide Preview' : 'Preview Section'}
                   </button>
@@ -1103,4 +1102,4 @@ export default function FeaturedProducts({ featuredProducts, availableProducts }
       </div>
     </AdminLayout>
   );
-} 
+}
